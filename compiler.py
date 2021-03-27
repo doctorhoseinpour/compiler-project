@@ -1,7 +1,14 @@
+#Globals
+file = open('input.txt', 'r')
+lastReadChar = None #everytime you want to go back (used a lookahead), set this to the current read character
+
+
+
 class NotRegex:
     @staticmethod
     def detect(txt, *regex):
         res = False
+
         for r in regex:
             if r == "\d":
                 res = res or txt.isdigit()
@@ -17,6 +24,7 @@ class NotRegex:
                 return res
         return res
 
+
 class Token:
     def __init__(self, tokenType, value):
         self.tokenType = tokenType # id / keyword / num / symbol 
@@ -26,10 +34,11 @@ class Token:
     def create_token(tokenString):
         keywords = ["if", "else", "void", "int", "while", "break", "switch", "default", "case", "return", "for"]
         if tokenString in keywords:
-            return Token("KEYWORD", )
+            return Token("KEYWORD", tokenString)
+        return Token("ID", tokenString)
     
     def __str__(self):
-        return f"{tokenType}, {value}"
+        return f"{self.tokenType}, {self.value}"
 
 class PanicException(Exception):    
     def __init__(self, message):
@@ -67,14 +76,13 @@ class Edge:
     #regex
     #destinationNode
 
-    def __init__(self,number,regex, destination):
+    def __init__(self,number, destination, *regexes):
         self.number = number
-        self.regex = regex
+        self.regexes = regexes
         self.destinationNode = destination
 
     def matches(self, character):
-        regRes = re.findall(self.regex, character)
-        return len(regRes) > 0
+        NotRegex.detect(character, *(self.regexes))
 
 
 
@@ -104,39 +112,51 @@ def createDFA():
     s15 = Node("15" , isFinal = True)
 
     # ID / Keyword
-    s0.addEdge(Edge(1, "\w+", s1))
-    s1.addEdge(Edge(1,"\w+", s1) , Edge(0 , "\s | : | ; | , | [ | ] | ( | ) | { | } | + | - | = | * | <", s2))
+    s0.addEdge(Edge(1, s1 ,"\w"))
+    s1.addEdge(Edge(1,s1,"\w") , Edge(0 , s2,"\s", "\sym", "/"))
     
     # Number
-    s0.addEdge(Edge(2 , "\d+" , s3))
-    s3.addEdge(Edge(1 , "\d+" , s3) , Edge(0 , "\s | : | ; | , | [ | ] | ( | ) | { | } | + | - | = | * | <" , s4))
+    s0.addEdge(Edge(2 , s3 ,"\d"))
+    s3.addEdge(Edge(1 , s3 ,"\d") , Edge(0 , s4 ,"\s" ,"\sym" ))
 
     # Symbol
-    s0.addEdge(Edge(3 , ": | ; | , | [ | ] | ( | ) | { | } | + | - | <" , s5) , Edge(4 , "=" , s6) , Edge(5 , "*" , s8))
-    s6.addEdge(Edge(1 , "=" , s7) , Edge(0 , "" , s9))
-    s8.addEdge(Edge(0 , "" , s9)) 
+    s0.addEdge(Edge(3 , s5 ,":" , ";" , "," , "[" , "]" , "(" , ")" , "{" , "}" , "+" , "-" , "<" ) , Edge(4 , s6 ,"=" ) , Edge(5 , s8 ,"*"))
+    s6.addEdge(Edge(1 ,  s7 ,"=" ) , Edge(0 , s9 ,"\d" , "\w" , "\s" , ":" , ";" , "," , "[" , "]" , "(" , ")" , "{" , "}" , "+" , "-" , "*" , "<"))
+    s8.addEdge(Edge(0 ,  s9 ,"\d" , "\w" , )) 
 
     # Comment
-    s0.addEdge(Edge(6 , , s10))
-    s10.addEdge(Edge(1 , , s11) , Edge(2 , , s13))
-    s11.addEdge(Edge(1 , , s12) , Edge(0 , , s11))
-    s13.addEdge(Edge(1 , , s14) , Edge(0 , , s13))
-    s14.addEdge(Edge(1 , , s14) , Edge(2 , , s15) , Edge(0 , , s13))
+    s0.addEdge(Edge(6 , s10 , ""))
+    s10.addEdge(Edge(1 ,s11 , "") , Edge(2 ,s13 , ))
+    s11.addEdge(Edge(1 ,s12 , ) , Edge(0 , s11 , ))
+    s13.addEdge(Edge(1 ,s14 , ) , Edge(0 ,s13 , ))
+    s14.addEdge(Edge(1 ,s14 , ) , Edge(2 ,s15 , ) , Edge(0 ,s13 , ))
     
 
     
-
-
-file = open('input.txt', 'r')
-Lines = file1.readlines()
-
 def get_next_token():
+    hasEnded = False
+    global lastReadChar
+    # start making the token
+    token = Token("IDK", "IDK")
+
+    char = lastReadChar if (lastReadChar != None) else file.read(1)
+    #todo: craete token
+
+    if not char:
+        hasEnded = True
+
+    #token is made
+    
+    return (token, hasEnded)
 
         
 while True:
-    char = file.read(1)
+    res = get_next_token()
+    hasEnded = res[1]
+    token = res[0]
               
-    if not char: 
+    if hasEnded: 
+        file.close()
         break
 
 """
