@@ -1,5 +1,35 @@
-import re
+class NotRegex:
+    @staticmethod
+    def detect(txt, *regex):
+        res = False
+        for r in regex:
+            if r == "\d":
+                res = res or txt.isdigit()
+            elif r == "\w":
+                res = res or txt.isdigit() or txt.isalpha()
+            elif r == "\sym":
+                res = res or (txt in ['$', ':', ',', ';' , '[' , ']' , ';' , ')' , '{' , '}' , '+' , '-' , '=' , '*' , '<'])
+            elif r == "\s":
+                res = res or (txt in ["\n", "\t", " ", "\f"])
+            else:
+                res = res or txt == r
+            if res:
+                return res
+        return res
 
+class Token:
+    def __init__(self, tokenType, value):
+        self.tokenType = tokenType # id / keyword / num / symbol 
+        self.value = value
+    
+    @staticmethod
+    def create_token(tokenString):
+        keywords = ["if", "else", "void", "int", "while", "break", "switch", "default", "case", "return", "for"]
+        if tokenString in keywords:
+            return Token("KEYWORD", )
+    
+    def __str__(self):
+        return f"{tokenType}, {value}"
 
 class PanicException(Exception):    
     def __init__(self, message):
@@ -34,7 +64,7 @@ class Node:
 
 class Edge:
 
-    #regex   
+    #regex
     #destinationNode
 
     def __init__(self,number,regex, destination):
@@ -47,9 +77,7 @@ class Edge:
         return len(regRes) > 0
 
 
-def create_token(tokenString):
-    keywords = ["if", "else", "void", "int", "while", "break", "switch", "default", "case", "return", "for"]
-    if keywords.
+
 
 def install_id():
     print("TODO")
@@ -87,18 +115,29 @@ def createDFA():
     s0.addEdge(Edge(3 , ": | ; | , | [ | ] | ( | ) | { | } | + | - | <" , s5) , Edge(4 , "=" , s6) , Edge(5 , "*" , s8))
     s6.addEdge(Edge(1 , "=" , s7) , Edge(0 , "" , s9))
     s8.addEdge(Edge(0 , "" , s9)) 
- 
+
+    # Comment
+    s0.addEdge(Edge(6 , , s10))
+    s10.addEdge(Edge(1 , , s11) , Edge(2 , , s13))
+    s11.addEdge(Edge(1 , , s12) , Edge(0 , , s11))
+    s13.addEdge(Edge(1 , , s14) , Edge(0 , , s13))
+    s14.addEdge(Edge(1 , , s14) , Edge(2 , , s15) , Edge(0 , , s13))
+    
 
     
 
 
-def get_token():
-    print("TODO")
+file = open('input.txt', 'r')
+Lines = file1.readlines()
 
+def get_next_token():
 
-f = open("input.txt", "r")
-
-
+        
+while True:
+    char = file.read(1)
+              
+    if not char: 
+        break
 
 """
 void main ( void ) {
