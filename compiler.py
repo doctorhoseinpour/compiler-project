@@ -46,9 +46,7 @@ class Token:
     def __str__(self):
         return f"{self.tokenType}, {self.value}"
 
-class PanicException(Exception):    
-    def __init__(self, message):
-        self.message = message
+
 
 
 class Node:
@@ -76,7 +74,7 @@ class Node:
         if dest == None and not self.isFinal:
             raise PanicException("nowhere to go & it's not final!")
         
-        return (dest, self.isFinal)
+        return dest
 
 
 class Edge:
@@ -146,6 +144,7 @@ def createDFA():
     
 
 startNode = createDFA()
+tokens = []
 
 def get_next_token():
     hasEnded = False
@@ -166,15 +165,17 @@ def get_next_token():
         token = None
         # print(currentNode.number, "->" , tokenString)
         try:
-            (nextNode, done) = currentNode.getNextState(char)
-            if done:
+            nextNode = currentNode.getNextState(char)
+            currentNode = nextNode
+            if nextNode.isFinal:
                 if currentNode.number in [2, 4, 9]:
                     lastReadChar = char
-                    tokenString = tokenString[0:-2]
+                    tokenString = tokenString[0:-1]
                 token = Token.create_token(tokenString, currentNode.number)
-                print(currentNode.number, " -> ", token)
+                tokens.append(token)
+                print("\n", currentNode.number, " -> ", token, sep="")
                 if lastReadChar != None :
-                    print("LastReadChar = ", lastReadChar )
+                    print("LastReadChar: ", lastReadChar if lastReadChar != " " else " SPACE " )
                 break
             elif nextNode != None:
                 currentNode = nextNode
@@ -196,26 +197,18 @@ while True:
     token = res[0]
               
     if hasEnded: 
+        print("\n\n\n\n\n\n")
+        for t in tokens:
+            if t == None: continue
+            print(t.tokenType, "\t:\t", t.value, sep="")
         file.close()
         break
 
-"""
-void main ( void ) {
-    int a = 0;
-    // comment1
-    a = 2 + 2;
-    a = a - 3;
-    cde = a;
-    if (b /* comment2 */ == 3d) {
-        a = 3;
-        cd!e = 7;
-    }
-    else */
-    {
-        b = a < cde;
-        {cde = @2;
-    }}
-    return;/* comment 3
-}
-"""
 
+class PanicException(Exception):    
+    def __init__(self, message):
+        self.message = message
+
+class UnclosedComment(Exception):    
+    def __init__(self, cm):
+        self.message = f"Unclosed comment: {cm}"
