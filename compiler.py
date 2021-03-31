@@ -1,6 +1,16 @@
 #Globals
 file = open('input.txt', 'r')
+tokens_file = open('tokens.txt', 'w')
+err_file = open('lexical_errors.txt', 'w')
+table_file = open('symbol_table.txt', 'w')
 lastReadChar = None #everytime you want to go back (used a lookahead), set this to the current read character
+reserved_keywords = ["if", "else", "void", "int", "while", "break", "switch", "default", "case", "return", "for"]
+
+
+class PanicException(Exception):    
+    def __init__(self, message):
+        self.message = message
+
 
 class NotRegex:
     @staticmethod
@@ -22,6 +32,13 @@ class NotRegex:
                 return res
         return res
 
+symbol_table = []
+def install_id(*ids):
+    for id in ids:
+        if not id in symbol_table:
+            symbol_table.append(id)
+            table_file.write(f"{len(symbol_table)}.\t{id}\n")
+install_id(*reserved_keywords)
 
 class Token:
     def __init__(self, tokenType, value):
@@ -31,9 +48,10 @@ class Token:
     @staticmethod
     def create_token(tokenString, stateNumber):
         # print(stateNumber, " -> ", tokenString)
-        keywords = ["if", "else", "void", "int", "while", "break", "switch", "default", "case", "return", "for"]
+        global reserved_keywords
         if stateNumber == 2:
-            if tokenString in keywords:
+            install_id(tokenString)
+            if tokenString in reserved_keywords:
                 return Token("KEYWORD", tokenString)
             return Token("ID", tokenString)
         elif stateNumber == 4:
@@ -92,9 +110,6 @@ class Edge:
 
 
 
-def install_id():
-    print("TODO")
-
 def panic():
     print("\t\t\t\t TODO: Panic")
 
@@ -144,11 +159,23 @@ def createDFA():
     
 
 startNode = createDFA()
+lineNo = 1
+onNewLine = True
 tokens = []
+
+
+def close_files():
+    file.close()
+    err_file.close()
+    table_file.close()
+    tokens_file.close()
+
 
 def get_next_token():
     hasEnded = False
     global lastReadChar
+    global lineNo
+    global onNewLine
     # start making the token
     currentNode = startNode
     tokenString = ""
@@ -157,13 +184,21 @@ def get_next_token():
         lastReadChar = None
 
         if not char:
+            if len(tokenString) > 0:
+                tokenString = tokenString.replace("\n", "")
+                msg = tokenString if len(tokenString) < 8  else tokenString[0:6]
+                err_file.write(f"{lineNo}.\t\t{msg}..., Unclosed comment")
+                close_files()
+
             hasEnded = True
             break
 
+        if char == "\n":
+            lineNo = lineNo + 1
+            onNewLine = True
 
         tokenString = tokenString + char
         token = None
-        # print(currentNode.number, "->" , tokenString)
         try:
             nextNode = currentNode.getNextState(char)
             currentNode = nextNode
@@ -172,10 +207,15 @@ def get_next_token():
                     lastReadChar = char
                     tokenString = tokenString[0:-1]
                 token = Token.create_token(tokenString, currentNode.number)
-                tokens.append(token)
-                print("\n", currentNode.number, " -> ", token, sep="")
-                if lastReadChar != None :
-                    print("LastReadChar: ", lastReadChar if lastReadChar != " " else " SPACE " )
+                if token != None:
+                    tokens.append(token)
+                    if onNewLine:
+                        tokens_file.write(f"\n{lineNo}.\t")
+                        onNewLine = False
+                    tokens_file.write(f"({token.tokenType}, {token.value}) ")
+                                        # print("\n", currentNode.number, " -> ", token, sep="")
+                                        # if lastReadChar != None :
+                                        #     print("LastReadChar: ", lastReadChar if lastReadChar != " " else " SPACE " )
                 break
             elif nextNode != None:
                 currentNode = nextNode
@@ -197,18 +237,4 @@ while True:
     token = res[0]
               
     if hasEnded: 
-        print("\n\n\n\n\n\n")
-        for t in tokens:
-            if t == None: continue
-            print(t.tokenType, "\t:\t", t.value, sep="")
-        file.close()
         break
-
-
-class PanicException(Exception):    
-    def __init__(self, message):
-        self.message = message
-
-class UnclosedComment(Exception):    
-    def __init__(self, cm):
-        self.message = f"Unclosed comment: {cm}"
