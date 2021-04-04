@@ -5,7 +5,11 @@ err_file = open('lexical_errors.txt', 'w')
 table_file = open('symbol_table.txt', 'w')
 lastReadChar = None #everytime you want to go back (used a lookahead), set this to the current read character
 reserved_keywords = ["if", "else", "void", "int", "while", "break", "switch", "default", "case", "return", "for"]
-
+lineNo = 1
+tokensFirstPanic = 1
+onNewLine = True
+tokenString = ""
+tokens = []
 
 class PanicException(Exception):    
     def __init__(self, message):
@@ -110,8 +114,27 @@ class Edge:
 
 
 
-def panic():
-    print("\t\t\t\t TODO: Panic")
+def panic(panicNodeNumber):
+    global lineNo
+    global onNewLine
+    global tokenString
+    global tokensFirstPanic
+    if onNewLine:
+        err_file.write(f"\n{lineNo}.\t")
+        onNewLine = False
+    if (tokensFirstPanic == 1):
+        if (panicNodeNumber == 0):
+            err_file.write(f"({tokenString}, invalid input) ")
+        elif (panicNodeNumber == 1):
+            err_file.write(f"({tokenString}, invalid input) ")
+        elif (panicNodeNumber == 3):
+            err_file.write(f"({tokenString}, invalid number) ")
+        elif (panicNodeNumber == 8):
+            err_file.write(f"({tokenString}, Unmatched comment) ")
+        tokensFirstPanic = 0
+    tokenString = tokenString[0:-1]
+    
+
 
 # creates the scanner DFA and returns the srart node
 def createDFA():
@@ -159,9 +182,7 @@ def createDFA():
     
 
 startNode = createDFA()
-lineNo = 1
-onNewLine = True
-tokens = []
+
 
 
 def close_files():
@@ -176,9 +197,12 @@ def get_next_token():
     global lastReadChar
     global lineNo
     global onNewLine
+    global tokenString
+    global tokensFirstPanic
     # start making the token
     currentNode = startNode
     tokenString = ""
+    tokensFirstPanic = 1
     while True:
         char = lastReadChar if (lastReadChar != None) else file.read(1)
         lastReadChar = None
@@ -201,6 +225,7 @@ def get_next_token():
         token = None
         try:
             nextNode = currentNode.getNextState(char)
+            panicNode = currentNode
             currentNode = nextNode
             if nextNode.isFinal:
                 if currentNode.number in [2, 4, 9]:
@@ -220,11 +245,10 @@ def get_next_token():
             elif nextNode != None:
                 currentNode = nextNode
             else:
-                print("We're not supposed to be here!")
-                panic()
+                panic(panicNode.number)
                 
         except PanicException:
-            panic()
+            panic(panicNode.number)
 
     #token is made    
     return (token, hasEnded)
