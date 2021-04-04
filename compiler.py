@@ -149,8 +149,8 @@ def panic(panicNodeNumber):
         err_file.write(f"{sp}({tokenString}, Unmatched comment)")
 
     elif (panicNodeNumber == 13):
-        msg = tokenString if len(tokenString) < 8  else f"{tokenString[0:6]}..."
-        err_file.write(f"({sp}{msg}, Unclosed comment) ")
+        msg = tokenString if len(tokenString) < 8  else f"{tokenString[0:7]}..."
+        err_file.write(f"({sp}{msg}, Unclosed comment)")
 
     tokenString = ""
     
