@@ -32,7 +32,7 @@ class NotRegex:
             elif r == "\w":
                 res = res or txt.isdigit() or txt.isalpha()
             elif r == "\sym":
-                res = res or (txt in ['$', ':', ',', ';' , '[' , ']' , ';' , '(', ')' , '{' , '}' , '+' , '-' , '=' , '*' , '<'])
+                res = res or (txt in [':', ',', ';' , '[' , ']' , ';' , '(', ')' , '{' , '}' , '+' , '-' , '=' , '*' , '<'])
             elif r == "\s":
                 res = res or (txt in ["\n", "\t", " ", "\f", "\v", "\r"])
             else:
@@ -233,14 +233,14 @@ def get_next_token():
             hasEnded = True
             break
 
-        if char == "\n" and tokenString == "":
+        alreadyOnNewLine = onNewLine
+        if char == "\n":
             lineNo = lineNo + 1
             onNewLine = True
             errorOnNewLine = True
 
         tokenString = tokenString + char
         
-
         if currentNode != None:
             nextNode = currentNode.getNextState(char)
             panicNode = currentNode
@@ -252,6 +252,9 @@ def get_next_token():
             token = Token.create_token(tokenString, currentNode.number)
             if token != None:
                 tokens.append(token)
+                if char == "\n":
+                    lineNo = lineNo - 1
+                    onNewLine = alreadyOnNewLine
                 if onNewLine:
                     nl = "\n"
                     if firstTokenLine:
@@ -260,10 +263,9 @@ def get_next_token():
                     tokens_file.write(f"{nl}{lineNo}.\t")
                     onNewLine = False
                 tokens_file.write(f"({token.tokenType}, {token.value}) ")
-                if char == "\n" and tokenString != "":
+                if char == "\n":
                     lineNo = lineNo + 1
                     onNewLine = True
-                    errorOnNewLine = True
                                         # print("\n", currentNode.number, " -> ", token, sep="")
                                         # if lastReadChar != None :
                                         #     print("LastReadChar: ", lastReadChar if lastReadChar != " " else " SPACE " )

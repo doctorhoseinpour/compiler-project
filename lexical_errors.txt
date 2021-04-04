@@ -1,1 +1,2 @@
-There is no lexical error.
+6.	(whi$, invalid input) 
+11.	(1d, invalid number) 
