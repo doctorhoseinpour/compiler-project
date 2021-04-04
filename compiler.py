@@ -14,6 +14,7 @@ errorOnNewLine = True
 firstTokenLine = True
 firstErrorLine = True
 tokenString = ""
+tokenStringStartLineNo = 0
 tokens = []
 
 class PanicException(Exception):    
@@ -121,15 +122,19 @@ def panic(panicNodeNumber):
     global errorOnNewLine
     global firstErrorLine
     global tokenString
+    global tokenStringStartLineNo
     # global tokensFirstPanic
     if errorOnNewLine:
         nl = "\n"
         if firstErrorLine:
             firstErrorLine = False
             nl = ""
-        err_file.write(f"{nl}{lineNo}.\t")
+        err_file.write(f"{nl}{tokenStringStartLineNo}.\t")
         errorOnNewLine = False
-    if (panicNodeNumber == 0):
+    
+    tokenString = tokenString.replace("\n", "")
+
+    if (panicNodeNumber == 0 or panicNodeNumber == 10):
         err_file.write(f"({tokenString}, invalid input) ")
     elif (panicNodeNumber == 1):
         err_file.write(f"({tokenString}, invalid input) ")
@@ -137,8 +142,8 @@ def panic(panicNodeNumber):
         err_file.write(f"({tokenString}, invalid number) ")
     elif (panicNodeNumber == 8):
         err_file.write(f"({tokenString}, Unmatched comment) ")
-    elif (panicNodeNumber == 10):
-        tokenString = tokenString.replace("\n", "")
+
+    elif (panicNodeNumber == 13):
         msg = tokenString if len(tokenString) < 8  else f"{tokenString[0:6]}..."
         err_file.write(f"({msg}, Unclosed comment) ")
 
@@ -215,8 +220,10 @@ def get_next_token():
     global firstTokenLine
     global errorOnNewLine
     global startNode
+    global tokenStringStartLineNo
     # start making the token
     currentNode = startNode
+    tokenStringStartLineNo = lineNo
     tokenString = ""
     token = None
     while True:
@@ -225,7 +232,7 @@ def get_next_token():
 
         if not char:
             if len(tokenString) > 0:
-                panic(10)
+                panic(13)
             close_files()
                 
 
