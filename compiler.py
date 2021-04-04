@@ -233,14 +233,13 @@ def get_next_token():
             hasEnded = True
             break
 
-        
-
         if char == "\n" and tokenString == "":
             lineNo = lineNo + 1
             onNewLine = True
             errorOnNewLine = True
 
         tokenString = tokenString + char
+        
 
         if currentNode != None:
             nextNode = currentNode.getNextState(char)
@@ -261,7 +260,7 @@ def get_next_token():
                     tokens_file.write(f"{nl}{lineNo}.\t")
                     onNewLine = False
                 tokens_file.write(f"({token.tokenType}, {token.value}) ")
-                if char == "\n":
+                if char == "\n" and tokenString != "":
                     lineNo = lineNo + 1
                     onNewLine = True
                     errorOnNewLine = True
