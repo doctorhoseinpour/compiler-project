@@ -47,7 +47,10 @@ def install_id(*ids):
     for id in ids:
         if not id in symbol_table:
             symbol_table.append(id)
-            table_file.write(f"{len(symbol_table)}.\t{id}\n")
+            ln = "\n"
+            if len(symbol_table) == 1:
+                ln = ""
+            table_file.write(f"{ln}{len(symbol_table)}.\t{id}")
 install_id(*reserved_keywords)
 
 class Token:
@@ -137,11 +140,11 @@ def panic(panicNodeNumber):
     tokenString = tokenString.replace("\n", "")
 
     if (panicNodeNumber == 0 or panicNodeNumber == 10):
-        err_file.write(f"{sp}({tokenString}, invalid input)")
+        err_file.write(f"{sp}({tokenString}, Invalid input)")
     elif (panicNodeNumber == 1):
-        err_file.write(f"{sp}({tokenString}, invalid input)")
+        err_file.write(f"{sp}({tokenString}, Invalid input)")
     elif (panicNodeNumber == 3):
-        err_file.write(f"{sp}({tokenString}, invalid number)")
+        err_file.write(f"{sp}({tokenString}, Invalid number)")
     elif (panicNodeNumber == 8):
         err_file.write(f"{sp}({tokenString}, Unmatched comment)")
 
@@ -207,9 +210,12 @@ def close_files():
 
     file.close()
     table_file.close()
+    tokens_file.write("\n")
     tokens_file.close()
     if firstErrorLine:
         err_file.write("There is no lexical error.")
+    
+    err_file.write("\n")
     err_file.close()
 
 
