@@ -9,8 +9,10 @@ file = open('input.txt', 'r')
 lastReadChar = None #everytime you want to go back (used a lookahead), set this to the current read character
 reserved_keywords = ["if", "else", "void", "int", "while", "break", "switch", "default", "case", "return", "for"]
 lineNo = 1
-tokensFirstPanic = 1
 onNewLine = True
+errorOnNewLine = True
+firstTokenLine = True
+firstErrorLine = True
 tokenString = ""
 tokens = []
 
@@ -30,7 +32,7 @@ class NotRegex:
             elif r == "\w":
                 res = res or txt.isdigit() or txt.isalpha()
             elif r == "\sym":
-                res = res or (txt in ['$', ':', ',', ';' , '[' , ']' , ';' , ')' , '{' , '}' , '+' , '-' , '=' , '*' , '<'])
+                res = res or (txt in ['$', ':', ',', ';' , '[' , ']' , ';' , '(', ')' , '{' , '}' , '+' , '-' , '=' , '*' , '<'])
             elif r == "\s":
                 res = res or (txt in ["\n", "\t", " ", "\f", "\v", "\r"])
             else:
@@ -116,23 +118,32 @@ class Edge:
 
 def panic(panicNodeNumber):
     global lineNo
-    global onNewLine
+    global errorOnNewLine
+    global firstErrorLine
     global tokenString
-    global tokensFirstPanic
-    if onNewLine:
-        err_file.write(f"\n{lineNo}.\t")
-        onNewLine = False
-    if (tokensFirstPanic == 1):
-        if (panicNodeNumber == 0):
-            err_file.write(f"({tokenString}, invalid input) ")
-        elif (panicNodeNumber == 1):
-            err_file.write(f"({tokenString}, invalid input) ")
-        elif (panicNodeNumber == 3):
-            err_file.write(f"({tokenString}, invalid number) ")
-        elif (panicNodeNumber == 8):
-            err_file.write(f"({tokenString}, Unmatched comment) ")
-        tokensFirstPanic = 0
-    tokenString = tokenString[0:-1]
+    # global tokensFirstPanic
+    if errorOnNewLine:
+        nl = "\n"
+        if firstErrorLine:
+            firstErrorLine = False
+            nl = ""
+        err_file.write(f"{nl}{lineNo}.\t")
+        errorOnNewLine = False
+    if (panicNodeNumber == 0):
+        err_file.write(f"({tokenString}, invalid input) ")
+    elif (panicNodeNumber == 1):
+        err_file.write(f"({tokenString}, invalid input) ")
+    elif (panicNodeNumber == 3):
+        err_file.write(f"({tokenString}, invalid number) ")
+    elif (panicNodeNumber == 8):
+        err_file.write(f"({tokenString}, Unmatched comment) ")
+    elif (panicNodeNumber == 10):
+        tokenString = tokenString.replace("\n", "")
+        msg = tokenString if len(tokenString) < 8  else tokenString[0:6]
+        err_file.write(f"({msg}..., Unclosed comment) ")
+        close_files()
+
+    tokenString = ""
     
 
 
@@ -186,10 +197,14 @@ startNode = createDFA()
 
 
 def close_files():
+    global firstErrorLine
+
     file.close()
-    err_file.close()
     table_file.close()
     tokens_file.close()
+    if firstErrorLine:
+        err_file.write("There is no lexical error.")
+    err_file.close()
 
 
 def get_next_token():
@@ -198,38 +213,40 @@ def get_next_token():
     global lineNo
     global onNewLine
     global tokenString
-    global tokensFirstPanic
+    global firstTokenLine
+    global errorOnNewLine
     global startNode
     # start making the token
     currentNode = startNode
     tokenString = ""
-    tokensFirstPanic = 1
+    token = None
     while True:
         char = lastReadChar if (lastReadChar != None) else file.read(1)
         lastReadChar = None
 
         if not char:
             if len(tokenString) > 0:
-                tokenString = tokenString.replace("\n", "")
-                msg = tokenString if len(tokenString) < 8  else tokenString[0:6]
-                err_file.write(f"{lineNo}.\t\t{msg}..., Unclosed comment")
-                close_files()
+                panic(10)
+            close_files()
+                
 
             hasEnded = True
             break
 
-        if char == "\n":
+        
+
+        if char == "\n" and tokenString == "":
             lineNo = lineNo + 1
             onNewLine = True
+            errorOnNewLine = True
 
         tokenString = tokenString + char
-        token = None
 
-        
-        nextNode = currentNode.getNextState(char)
-        panicNode = currentNode
-        currentNode = nextNode
-        if nextNode.isFinal:
+        if currentNode != None:
+            nextNode = currentNode.getNextState(char)
+            panicNode = currentNode
+            currentNode = nextNode
+        if nextNode != None and nextNode.isFinal:
             if currentNode.number in [2, 4, 9]:
                 lastReadChar = char
                 tokenString = tokenString[0:-1]
@@ -237,9 +254,17 @@ def get_next_token():
             if token != None:
                 tokens.append(token)
                 if onNewLine:
-                    tokens_file.write(f"\n{lineNo}.\t")
+                    nl = "\n"
+                    if firstTokenLine:
+                        firstTokenLine = False
+                        nl = ""
+                    tokens_file.write(f"{nl}{lineNo}.\t")
                     onNewLine = False
                 tokens_file.write(f"({token.tokenType}, {token.value}) ")
+                if char == "\n":
+                    lineNo = lineNo + 1
+                    onNewLine = True
+                    errorOnNewLine = True
                                         # print("\n", currentNode.number, " -> ", token, sep="")
                                         # if lastReadChar != None :
                                         #     print("LastReadChar: ", lastReadChar if lastReadChar != " " else " SPACE " )
@@ -248,6 +273,7 @@ def get_next_token():
             currentNode = nextNode
         else:
             panic(panicNode.number)
+            currentNode = startNode
                 
 
     #token is made    
