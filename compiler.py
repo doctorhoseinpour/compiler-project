@@ -242,6 +242,7 @@ def get_next_token():
         alreadyOnNewLine = onNewLine
         if char == "\n":
             lineNo = lineNo + 1
+            print(lineNo , " sallllaaam")
             onNewLine = True
             errorOnNewLine = True
 
@@ -259,6 +260,7 @@ def get_next_token():
             if token != None:
                 tokens.append(token)
                 if char == "\n":
+                    print(lineNo, " salam")
                     lineNo = lineNo - 1
                     onNewLine = alreadyOnNewLine
                 if onNewLine:
@@ -270,6 +272,7 @@ def get_next_token():
                     onNewLine = False
                 tokens_file.write(f"({token.tokenType}, {token.value}) ")
                 if char == "\n":
+                    print(lineNo, " khodafez")
                     lineNo = lineNo + 1
                     onNewLine = True
                                         # print("\n", currentNode.number, " -> ", token, sep="")
