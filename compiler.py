@@ -124,7 +124,9 @@ def panic(panicNodeNumber):
     global tokenString
     global tokenStringStartLineNo
     # global tokensFirstPanic
+    sp = " "
     if errorOnNewLine:
+        sp = ""
         nl = "\n"
         if firstErrorLine:
             firstErrorLine = False
@@ -135,17 +137,17 @@ def panic(panicNodeNumber):
     tokenString = tokenString.replace("\n", "")
 
     if (panicNodeNumber == 0 or panicNodeNumber == 10):
-        err_file.write(f"({tokenString}, invalid input) ")
+        err_file.write(f"{sp}({tokenString}, invalid input)")
     elif (panicNodeNumber == 1):
-        err_file.write(f"({tokenString}, invalid input) ")
+        err_file.write(f"{sp}({tokenString}, invalid input)")
     elif (panicNodeNumber == 3):
-        err_file.write(f"({tokenString}, invalid number) ")
+        err_file.write(f"{sp}({tokenString}, invalid number)")
     elif (panicNodeNumber == 8):
-        err_file.write(f"({tokenString}, Unmatched comment) ")
+        err_file.write(f"{sp}({tokenString}, Unmatched comment)")
 
     elif (panicNodeNumber == 13):
         msg = tokenString if len(tokenString) < 8  else f"{tokenString[0:6]}..."
-        err_file.write(f"({msg}, Unclosed comment) ")
+        err_file.write(f"({sp}{msg}, Unclosed comment) ")
 
     tokenString = ""
     
@@ -242,7 +244,6 @@ def get_next_token():
         alreadyOnNewLine = onNewLine
         if char == "\n":
             lineNo = lineNo + 1
-            print(lineNo , " sallllaaam")
             onNewLine = True
             errorOnNewLine = True
 
@@ -260,19 +261,19 @@ def get_next_token():
             if token != None:
                 tokens.append(token)
                 if char == "\n":
-                    print(lineNo, " salam")
                     lineNo = lineNo - 1
                     onNewLine = alreadyOnNewLine
+                sp = " "
                 if onNewLine:
+                    sp = ""
                     nl = "\n"
                     if firstTokenLine:
                         firstTokenLine = False
                         nl = ""
                     tokens_file.write(f"{nl}{lineNo}.\t")
                     onNewLine = False
-                tokens_file.write(f"({token.tokenType}, {token.value}) ")
+                tokens_file.write(f"{sp}({token.tokenType}, {token.value})")
                 if char == "\n":
-                    print(lineNo, " khodafez")
                     # lineNo = lineNo + 1C
                     onNewLine = True
                                         # print("\n", currentNode.number, " -> ", token, sep="")
