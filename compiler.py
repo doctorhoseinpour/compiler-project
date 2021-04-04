@@ -1,8 +1,11 @@
 #Globals
-file = open('input.txt', 'r')
 tokens_file = open('tokens.txt', 'w')
 err_file = open('lexical_errors.txt', 'w')
 table_file = open('symbol_table.txt', 'w')
+file = open('input.txt', 'r')
+
+
+
 lastReadChar = None #everytime you want to go back (used a lookahead), set this to the current read character
 reserved_keywords = ["if", "else", "void", "int", "while", "break", "switch", "default", "case", "return", "for"]
 lineNo = 1
@@ -92,9 +95,6 @@ class Node:
         for e in self.edges:
             if e.matches(character):
                 dest = e.destinationNode
-
-        if dest == None and not self.isFinal:
-            raise PanicException("nowhere to go & it's not final!")
         
         return dest
 
@@ -199,6 +199,7 @@ def get_next_token():
     global onNewLine
     global tokenString
     global tokensFirstPanic
+    global startNode
     # start making the token
     currentNode = startNode
     tokenString = ""
@@ -223,32 +224,31 @@ def get_next_token():
 
         tokenString = tokenString + char
         token = None
-        try:
-            nextNode = currentNode.getNextState(char)
-            panicNode = currentNode
-            currentNode = nextNode
-            if nextNode.isFinal:
-                if currentNode.number in [2, 4, 9]:
-                    lastReadChar = char
-                    tokenString = tokenString[0:-1]
-                token = Token.create_token(tokenString, currentNode.number)
-                if token != None:
-                    tokens.append(token)
-                    if onNewLine:
-                        tokens_file.write(f"\n{lineNo}.\t")
-                        onNewLine = False
-                    tokens_file.write(f"({token.tokenType}, {token.value}) ")
+
+        
+        nextNode = currentNode.getNextState(char)
+        panicNode = currentNode
+        currentNode = nextNode
+        if nextNode.isFinal:
+            if currentNode.number in [2, 4, 9]:
+                lastReadChar = char
+                tokenString = tokenString[0:-1]
+            token = Token.create_token(tokenString, currentNode.number)
+            if token != None:
+                tokens.append(token)
+                if onNewLine:
+                    tokens_file.write(f"\n{lineNo}.\t")
+                    onNewLine = False
+                tokens_file.write(f"({token.tokenType}, {token.value}) ")
                                         # print("\n", currentNode.number, " -> ", token, sep="")
                                         # if lastReadChar != None :
                                         #     print("LastReadChar: ", lastReadChar if lastReadChar != " " else " SPACE " )
-                break
-            elif nextNode != None:
-                currentNode = nextNode
-            else:
-                panic(panicNode.number)
-                
-        except PanicException:
+            break
+        elif nextNode != None:
+            currentNode = nextNode
+        else:
             panic(panicNode.number)
+                
 
     #token is made    
     return (token, hasEnded)
