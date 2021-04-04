@@ -139,9 +139,8 @@ def panic(panicNodeNumber):
         err_file.write(f"({tokenString}, Unmatched comment) ")
     elif (panicNodeNumber == 10):
         tokenString = tokenString.replace("\n", "")
-        msg = tokenString if len(tokenString) < 8  else tokenString[0:6]
-        err_file.write(f"({msg}..., Unclosed comment) ")
-        close_files()
+        msg = tokenString if len(tokenString) < 8  else f"{tokenString[0:6]}..."
+        err_file.write(f"({msg}, Unclosed comment) ")
 
     tokenString = ""
     
@@ -227,6 +226,7 @@ def get_next_token():
         if not char:
             if len(tokenString) > 0:
                 panic(10)
+            close_files()
                 
 
             hasEnded = True
