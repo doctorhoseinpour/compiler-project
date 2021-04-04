@@ -273,7 +273,7 @@ def get_next_token():
                 tokens_file.write(f"({token.tokenType}, {token.value}) ")
                 if char == "\n":
                     print(lineNo, " khodafez")
-                    lineNo = lineNo + 1
+                    # lineNo = lineNo + 1C
                     onNewLine = True
                                         # print("\n", currentNode.number, " -> ", token, sep="")
                                         # if lastReadChar != None :
