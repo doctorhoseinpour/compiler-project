@@ -227,7 +227,6 @@ def get_next_token():
         if not char:
             if len(tokenString) > 0:
                 panic(10)
-            close_files()
                 
 
             hasEnded = True
