@@ -215,7 +215,6 @@ def close_files():
     if firstErrorLine:
         err_file.write("There is no lexical error.")
     
-    err_file.write("\n")
     err_file.close()
 
 
