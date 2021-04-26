@@ -1,7 +1,9 @@
 import anytree
+import scanner
 
 #Global flags
 hasLearntTheGrammar = False
+lookahead = ''
 
 class ParserBro:
     def get_first(nonTerminal):
@@ -21,21 +23,18 @@ class ParserBro:
             return "},,;,(" #follow(A) = {...}
 
     def get_rhs_grammars(nonTerminal):
-        return AllRHSfromGrammarWhere_nonTerminal_isOntheLHS
+        return "AllRHSfromGrammarWhere_nonTerminal_isOntheLHS"
 
 
 
 
 
 def procedure(nonTerminal, la):
-    if hasLearntTheGrammar == False:
-        learnGrammar()
-    
     rhs = ParserBro.get_rhs_grammars(nonTerminal)
-    rhss = rhs.slipt('~')
+    rhss = rhs.split('~')
     for r in rhss: # except for epsilon 
         rr = r.split(' ') #first token/non_terminal = rr[0]
-        frists = ParserBro.getFirst(rr[0]).split('~')
+        frists = ParserBro.get_first(rr[0]).split('~')
         if la in frists:
             for gholam in rr:
                 if fuck in terminals:
@@ -49,5 +48,22 @@ def procedure(nonTerminal, la):
 
 
 
+
+def next_lookahead():
+    token = scanner.get_next_token()
+    while(not token):
+        token = scanner.get_next_token()
+    return token
+
 def learnGrammar():
-    print("i'm learning boss")
+    open('grammar.txt', 'r')
+
+
+def startParsing():
+    global lookahaed
+    learnGrammar()
+    lookahead = next_lookahead().tokenType
+    procedure('program', lookahead)
+
+    # if token.tokenType == '$':
+        #this is the end

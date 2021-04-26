@@ -5,11 +5,11 @@ import scanner
 import parser
 
 
-while True:
-    
-    res = scanner.get_next_token()
-    hasEnded = res[1]
-    token = res[0]
-              
-    if hasEnded: 
-        break
+parser.startParsing()
+
+# while True:
+#     token = scanner.get_next_token()
+#     if not token: continue
+#     print(str(token))
+#     if token.tokenType == '$':
+#         break

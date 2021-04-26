@@ -56,7 +56,7 @@ install_id(*reserved_keywords)
 
 class Token:
     def __init__(self, tokenType, value):
-        self.tokenType = tokenType # id / keyword / num / symbol 
+        self.tokenType = tokenType # id / keyword / num / symbol / $
         self.value = value
     
     @staticmethod
@@ -280,11 +280,7 @@ def get_next_token():
                     onNewLine = False
                 tokens_file.write(f"{sp}({token.tokenType}, {token.value})")
                 if char == "\n":
-                    # lineNo = lineNo + 1C
                     onNewLine = True
-                                        # print("\n", currentNode.number, " -> ", token, sep="")
-                                        # if lastReadChar != None :
-                                        #     print("LastReadChar: ", lastReadChar if lastReadChar != " " else " SPACE " )
             break
         elif nextNode != None:
             currentNode = nextNode
@@ -293,6 +289,8 @@ def get_next_token():
             currentNode = startNode
                 
 
-    #token is made    
-    return (token, hasEnded)
+    #token is made
+    if hasEnded:
+        return Token('$', '$')
+    return token
 

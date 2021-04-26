@@ -9,7 +9,3 @@
 9.	case
 10.	return
 11.	for
-12.	main
-13.	prod
-14.	i
-15.	output
