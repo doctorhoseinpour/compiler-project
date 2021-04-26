@@ -1,23 +1,24 @@
 import anytree
 import scanner
+from printColors import colors
 
 #Global flags
 hasLearntTheGrammar = False
-lookahead = ''
+lookahead = None
+Ended = False
 
 class Grammar:
     
-    # grammar
+    grammar = {'Program':['DeclarationList $']}
 
     @classmethod
     def learnGrammar(cls):
         gf = open('grammar.txt', 'r')
         lines = gf.readlines()
-        cls.grammar = {'Program':['DeclarationList', '$']}
         for line in lines[1:] :
-            line = line.replace('\n', '').split('-> ')
-            lhs = line[0]
-            rhs = [line[1]]
+            line = line.replace('\n', '').split(' -> ')
+            lhs = line[0].strip()
+            rhs = [line[1].strip()]
             if 'ε' in rhs: continue
             if lhs in cls.grammar.keys():
                 cls.grammar[lhs] = cls.grammar[lhs] + rhs
@@ -159,7 +160,7 @@ class Grammar:
         if nonTerminal == 'Param':
             return ")~,"
         if nonTerminal == 'ParamPrime':
-            return "(~,"
+            return ")~,"
         if nonTerminal == 'CompoundStmt':
             return "$~ID~;~NUM~(~int~void~{~}~break~if~else~while~return~for~+~-"
         if nonTerminal == 'StatementList':
@@ -240,51 +241,167 @@ class Grammar:
             return ")"
 
     @classmethod
+    def get_first_rhs(cls, rhs):
+        stuff = rhs.split(' ')
+        firsts = []
+        for i in stuff:
+            if not cls.is_non_terminal(i):
+                firsts.append(i)
+                return firsts
+            ifirst = cls.get_first(i).split('~')
+            if 'EPSILON' in ifirst:
+                firsts = firsts + ifirst[:-1]
+            else:
+                firsts = firsts + ifirst
+                return firsts
+        return firsts
+
+
+    @classmethod
     def get_rhs_grammars(cls, nonTerminal):
-        return "AllRHSfromGrammarWhere_nonTerminal_isOntheLHS"
+        return cls.grammar[nonTerminal]
+
+    @classmethod
+    def is_non_terminal(cls, x):
+        return (x in cls.grammar.keys())
 
 
 
 
 
-def procedure(nonTerminal, la):
-    rhs = ParserBro.get_rhs_grammars(nonTerminal)
-    rhss = rhs.split('~')
-    for r in rhss: # except for epsilon 
-        rr = r.split(' ') #first token/non_terminal = rr[0]
-        frists = ParserBro.get_first(rr[0]).split('~')
-        if la in frists:
-            for gholam in rr:
-                if fuck in terminals:
-                    match(la, gholam)
+class TreeMaker:
+
+    depth = 0
+    currentNode = None
+
+    @classmethod
+    def makeNode(cls, id, goIn = False):
+        # newNode = ...
+        print('made node: ', id)
+        if goIn:
+            # currentNode = newNode if goIn = True
+            cls.depth = cls.depth + 1
+            print('goin in, depth: ', cls.depth)
+
+    @classmethod
+    def goUp(cls):
+        # cls.currentNode = cls.currentNode.parent
+        cls.depth = cls.depth - 1
+
+
+def match(terminal):
+    global lookahead
+    if lookahead.tokenType in ['KEYWORD', 'SYMBOL']:
+        la = lookahead.value
+    else:
+        la = lookahead.tokenType
+
+    if terminal == la:
+        print(f"{colors.OKGREEN}\t\tMATCH -> {lookahead}{colors.ENDC}")
+        TreeMaker.makeNode(str(lookahead), False)
+    else:
+        print(f"{colors.FAIL}well fuck! @ match{colors.ENDC}")
+    next_lookahead()
+
+
+
+
+
+
+count = 0
+def procedure(nonTerminal):
+    global lookahead
+    global Ended
+    global count
+    count = count + 1
+    if count > 200:
+        exit()
+
+    if lookahead.tokenType in ['KEYWORD', 'SYMBOL']:
+        la = lookahead.value
+    else:
+        la = lookahead.tokenType
+
+    print(f'\t\t{colors.OKCYAN} Procedure: {nonTerminal} ... lookahead: {la} {colors.ENDC} \n')
+
+  
+    rhs = Grammar.get_rhs_grammars(nonTerminal)
+    print('RHS = ', rhs)
+    for r in rhs:
+        if Ended: return
+
+        firsts = Grammar.get_first_rhs(r)
+        print('\t r from rhs is:', r,  'firsts: ', firsts)
+        if la in firsts:
+            for word in r.split(' '):
+                if Ended: return
+
+                if Grammar.is_non_terminal(word):
+                    TreeMaker.makeNode(word, goIn=True)
+                    procedure(word)
                 else:
-                    procedure(gholam, la)
-            #callthem
+                    match(word)
+                    if lookahead.tokenType in ['KEYWORD', 'SYMBOL']:
+                        la = lookahead.value
+                    else:
+                        la = lookahead.tokenType
+            TreeMaker.goUp()
+            return 
+                    
     #error handling
     else:
-        print("yo mama dumb")
+
+        print(f"{colors.FAIL}\t\t#{scanner.lineNo} : follow of  {nonTerminal} : {Grammar.get_follow(nonTerminal)} {colors.ENDC}")
+        if la in Grammar.get_follow(nonTerminal).split('~'):
+            if 'EPSILON' in Grammar.get_first(nonTerminal).split('~'):
+                TreeMaker.makeNode('epsilon', goIn=False)
+                TreeMaker.goUp()
+                return 
+
+            print(f"{colors.FAIL}\t\t#{scanner.lineNo} : Missing {nonTerminal}{colors.ENDC}")
+            #honestly idk what we're supposed to do here! :| 
+            TreeMaker.goUp()
+            return 
+        else:
+            if (la == '$'):
+                print(f'{colors.FAIL}\t\t#{scanner.lineNo} : syntax error, unexpected EOF{colors.ENDC}')
+                Ended = True
+            else:
+                print(f'{colors.FAIL}\t\t#{scanner.lineNo} : syntax error, illegal {la}{colors.ENDC}')
+                next_lookahead()
+                procedure(nonTerminal)
+            return
+    TreeMaker.goUp()
+    return
 
 
 
 
 def next_lookahead():
-    token = scanner.get_next_token()
-    while(not token):
-        token = scanner.get_next_token()
-    return token
-
-def learnGrammar():
-    open('grammar.txt', 'r')
+    global lookahead
+    
+    if lookahead and lookahead.tokenType == '$': 
+        print(TreeMaker.depth)
+        return
+    
+    lookahead = scanner.get_next_token()
+    while(not lookahead):
+        lookahead = scanner.get_next_token()
+    print(f"{colors.WARNING} got the next token: {lookahead}{colors.ENDC}")
 
 
 def startParsing():
     global lookahaed
-    learnGrammar()
-    lookahead = next_lookahead().tokenType
-    procedure('program', lookahead)
+    Grammar.learnGrammar()
+    next_lookahead()
+    procedure('Program')
 
     # if token.tokenType == '$':
         #this is the end
 
 
-Grammar.learnGrammar()
+# Grammar.learnGrammar()
+# print(Grammar.get_first_rhs('SimpleExpressionPrime'))
+
+# lookahead = scanner.Token('KEYWORD', 'void')
+# procedure('Program')

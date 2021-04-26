@@ -76,10 +76,10 @@ class Token:
             return Token("SYMBOL" , tokenString)
     
     def __str__(self):
-        return f"{self.tokenType}, {self.value}"
+        return f"({self.tokenType}, {self.value}) "
 
 
-
+        
 
 class Node:
 
