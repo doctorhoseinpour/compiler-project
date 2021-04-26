@@ -5,8 +5,27 @@ import scanner
 hasLearntTheGrammar = False
 lookahead = ''
 
-class ParserBro:
-    def get_first(self , nonTerminal):
+class Grammar:
+    
+    # grammar
+
+    @classmethod
+    def learnGrammar(cls):
+        gf = open('grammar.txt', 'r')
+        lines = gf.readlines()
+        cls.grammar = {'Program':['DeclarationList', '$']}
+        for line in lines[1:] :
+            line = line.replace('\n', '').split('-> ')
+            lhs = line[0]
+            rhs = [line[1]]
+            if 'ε' in rhs: continue
+            if lhs in cls.grammar.keys():
+                cls.grammar[lhs] = cls.grammar[lhs] + rhs
+            else:
+                cls.grammar[lhs] = rhs
+
+    @classmethod
+    def get_first(cls, nonTerminal):
         if nonTerminal == 'Program':
             return "$~int~void"
         if nonTerminal == 'DeclarationList':
@@ -113,8 +132,8 @@ class ParserBro:
             return ",~EPSILON"
         return nonTerminal
 
-
-    def get_follow(self , nonTerminal):
+    @classmethod
+    def get_follow(cls, nonTerminal):
         if nonTerminal == 'Program':
             return "$"
         if nonTerminal == 'DeclarationList':
@@ -220,7 +239,8 @@ class ParserBro:
         if nonTerminal == 'ArgListPrime':
             return ")"
 
-    def get_rhs_grammars(nonTerminal):
+    @classmethod
+    def get_rhs_grammars(cls, nonTerminal):
         return "AllRHSfromGrammarWhere_nonTerminal_isOntheLHS"
 
 
@@ -265,3 +285,6 @@ def startParsing():
 
     # if token.tokenType == '$':
         #this is the end
+
+
+Grammar.learnGrammar()
