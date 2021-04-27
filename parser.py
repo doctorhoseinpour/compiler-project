@@ -1,5 +1,6 @@
 import anytree
 import scanner
+import Modules.camelToSnake as camelToSnake
 from printColors import colors
 from anytree import Node , RenderTree
 
@@ -33,6 +34,7 @@ class Grammar:
 
     @classmethod
     def get_first(cls, nonTerminal):
+        nonTerminal = camelToSnake.camelCase(nonTerminal)
         if nonTerminal == 'Program':
             return "$~int~void"
         if nonTerminal == 'DeclarationList':
@@ -141,6 +143,7 @@ class Grammar:
 
     @classmethod
     def get_follow(cls, nonTerminal):
+        nonTerminal = camelToSnake.camelCase(nonTerminal)
         if nonTerminal == 'Program':
             return "$"
         if nonTerminal == 'DeclarationList':
@@ -249,6 +252,7 @@ class Grammar:
     @classmethod
     def get_first_rhs(cls, rhs):
         stuff = rhs.split(' ')
+        if '' in stuff: stuff.remove('')
         firsts = []
         hasEpsilon = False
         for i in stuff:
@@ -262,7 +266,6 @@ class Grammar:
             else:
                 firsts = firsts + ifirst
                 return firsts
-        print('shtupid innit', hasEpsilon)
         if hasEpsilon: 
             firsts = firsts + ['EPSILON']
         return firsts
@@ -270,20 +273,13 @@ class Grammar:
 
     @classmethod
     def get_rhs_grammars(cls, nonTerminal):
+        nonTerminal = camelToSnake.kinda_snake_case(nonTerminal)
         return cls.grammar[nonTerminal]
 
     @classmethod
     def is_non_terminal(cls, x):
-        return (x in cls.grammar.keys())
-
-
-
-
-def kinda_snake_case(x):
-    for i in range(1, len(x) - 1):
-        if x[i].isupper():
-            x = x[:i] + '-' + x[i].lower() + x[i+1:]
-    return x
+        res = ((x in cls.grammar.keys()) or (camelToSnake.kinda_snake_case(x) in cls.grammar.keys()))
+        return res
 
 
 class TreeMaker:
@@ -294,7 +290,7 @@ class TreeMaker:
     @classmethod
     def appendNode(cls, ID, goIn = False):
         new_node = Node(name = ID , parent = cls.currentNode)
-        print('made node: ', ID)
+        print(f'\n\n {colors.OKBLUE} made node: {new_node.name} {colors.ENDC}\n\n')
         if goIn:
             cls.currentNode = new_node
             cls.depth = cls.depth + 1
@@ -305,6 +301,17 @@ class TreeMaker:
         if cls.currentNode.parent:
             cls.currentNode = cls.currentNode.parent
             cls.depth = cls.depth - 1
+
+
+    @classmethod
+    def deleteCurrentNode(cls):
+        if cls.currentNode.parent == None: return 
+        temp = cls.currentNode.parent
+        cls.currentNode.parent = None
+        cls.currentNode = temp
+        cls.depth = cls.depth - 1
+        
+
     @classmethod
     def printTree(cls):
         for pre, _, node in RenderTree(cls.root):
@@ -323,6 +330,7 @@ class TreeMaker:
 
 def match(terminal):
     global lookahead
+    global ErrorFileEmpty
     if lookahead.tokenType in ['KEYWORD', 'SYMBOL']:
         la = lookahead.value
     else:
@@ -332,7 +340,11 @@ def match(terminal):
         print(f"{colors.OKGREEN}\t\tMATCH -> {lookahead}{colors.ENDC}")
         TreeMaker.appendNode(str(lookahead), False)
     else:
-        print(f"{colors.FAIL}well fuck! @ match{colors.ENDC}")
+        print(f"{colors.FAIL}\t\t#{scanner.lineNo} : missing {terminal}{colors.ENDC}")
+        
+        ErrorFile.write(f"#{scanner.lineNo} : syntax error, missing {terminal}\n")
+        ErrorFileEmpty = False
+        return
     next_lookahead()
 
 
@@ -352,19 +364,20 @@ def procedure(nonTerminal):
 
   
     rhs = Grammar.get_rhs_grammars(nonTerminal)
-    print('RHS = ', rhs)
+    # print('RHS = ', rhs)
     for r in rhs:
         if r == 'EPSILON': continue
         if Ended: return
 
         firsts = Grammar.get_first_rhs(r)
-        print('\t r from rhs is:', r,  'firsts: ', firsts)
+        # print('\t r from rhs is:', r,  'firsts: ', firsts)
         if la in firsts:
             for word in r.split(' '):
                 if Ended: return
+                if word == '': continue
 
                 if Grammar.is_non_terminal(word):
-                    snakeCased = kinda_snake_case(word)
+                    snakeCased = camelToSnake.kinda_snake_case(word)
                     TreeMaker.appendNode(snakeCased, goIn=True)
                     procedure(word)
                 else:
@@ -397,9 +410,10 @@ def procedure(nonTerminal):
                         if 'EPSILON' in suspects:
                             for word in r.split(' '):
                                 if Ended: return
+                                if word == '': continue
 
                                 if Grammar.is_non_terminal(word):
-                                    snakeCased = kinda_snake_case(word)
+                                    snakeCased = camelToSnake.kinda_snake_case(word)
                                     TreeMaker.appendNode(snakeCased, goIn=True)
                                     procedure(word)
                                 else:
@@ -414,11 +428,10 @@ def procedure(nonTerminal):
 
 
 
-            print(f"{colors.FAIL}\t\t#{scanner.lineNo} : Missing {nonTerminal}{colors.ENDC}")
-            ErrorFile.write(f"#{scanner.lineNo} : syntax error, Missing {nonTerminal}\n")
+            print(f"{colors.FAIL}\t\t#{scanner.lineNo} : missing {nonTerminal}{colors.ENDC}")
+            ErrorFile.write(f"#{scanner.lineNo} : syntax error, missing {nonTerminal}\n")
             ErrorFileEmpty = False
-            #honestly idk what we're supposed to do here! :| 
-            TreeMaker.goUp()
+            TreeMaker.deleteCurrentNode()
             return 
         else:
             if (la == '$'):
@@ -426,6 +439,7 @@ def procedure(nonTerminal):
                 ErrorFile.write(f'#{scanner.lineNo} : syntax error, unexpected EOF')
                 ErrorFileEmpty = False
                 Ended = True
+                TreeMaker.deleteCurrentNode()
             else:
                 print(f'{colors.FAIL}\t\t#{scanner.lineNo} : syntax error, illegal {la}{colors.ENDC}')
                 ErrorFile.write(f'#{scanner.lineNo} : syntax error, illegal {la}\n')
@@ -443,13 +457,9 @@ def next_lookahead():
     global lookahead
     global ErrorFileEmpty
     
-    if lookahead and lookahead.tokenType == '$': 
-        TreeMaker.renderTreeInFile()
-        if ErrorFileEmpty:
-            ErrorFile.write("There is no syntax error.")
-        ErrorFile.close()
+    if lookahead and lookahead.tokenType == '$':
         return
-    
+
     lookahead = scanner.get_next_token()
     while(not lookahead):
         lookahead = scanner.get_next_token()
@@ -461,16 +471,21 @@ def startParsing():
     Grammar.learnGrammar()
     next_lookahead()
     procedure('Program')
+    TreeMaker.renderTreeInFile()
+    if ErrorFileEmpty:
+        ErrorFile.write("There is no syntax error.")
+    ErrorFile.close()
+    return
 
     # if token.tokenType == '$':
         #this is the end
 
 
-Grammar.learnGrammar()
+# Grammar.learnGrammar()
 # print(Grammar.get_first_rhs('SimpleExpressionPrime'))
 
-lookahead = scanner.Token('KEYWORD', 'for')
-procedure('Statement')
+# lookahead = scanner.Token('SYMBOL', '}')
+# procedure('StatementList')
 
 
 # print(kinda_snake_case('(NUM, 12')) #Program-fucker-s

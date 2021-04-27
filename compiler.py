@@ -7,9 +7,5 @@ import parser
 
 parser.startParsing()
 
-# while True:
-#     token = scanner.get_next_token()
-#     if not token: continue
-#     print(str(token))
-#     if token.tokenType == '$':
-#         break
+
+# all the modules used in this project except for AnyTree, are made by our selves and are included in the directory
