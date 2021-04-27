@@ -312,7 +312,7 @@ def match(terminal):
 
     if terminal == la:
         print(f"{colors.OKGREEN}\t\tMATCH -> {lookahead}{colors.ENDC}")
-        TreeMaker.makeNode(str(lookahead), False)
+        TreeMaker.appendNode(str(lookahead), False)
     else:
         print(f"{colors.FAIL}well fuck! @ match{colors.ENDC}")
     next_lookahead()
