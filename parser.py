@@ -1,11 +1,14 @@
 import anytree
 import scanner
 from printColors import colors
+from anytree import Node , RenderTree
 
 #Global flags
 hasLearntTheGrammar = False
 lookahead = None
 Ended = False
+
+
 
 class Grammar:
     
@@ -269,24 +272,35 @@ class Grammar:
 
 
 
+
 class TreeMaker:
 
-    depth = 0
-    currentNode = None
-
+    depth = 1
+    root = Node(name = "program" , parent = None)
+    currentNode = root
     @classmethod
-    def makeNode(cls, id, goIn = False):
-        # newNode = ...
-        print('made node: ', id)
+    def appendNode(cls, ID, goIn = False):
+        new_node = Node(name = ID , parent = cls.currentNode)
+        print('made node: ', ID)
         if goIn:
-            # currentNode = newNode if goIn = True
+            cls.currentNode = new_node
             cls.depth = cls.depth + 1
             print('goin in, depth: ', cls.depth)
 
     @classmethod
     def goUp(cls):
-        # cls.currentNode = cls.currentNode.parent
-        cls.depth = cls.depth - 1
+        if cls.currentNode.parent:
+            cls.currentNode = cls.currentNode.parent
+            cls.depth = cls.depth - 1
+    @classmethod
+    def printTree(cls):
+        for pre, _, node in RenderTree(cls.root):
+            print("%s%s" % (pre, node.name))
+    @classmethod
+    def renderTreeInFile(cls):
+        file = open("parse_tree.txt" , "w")
+        file.write()
+        file.close
 
 
 def match(terminal):
