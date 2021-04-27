@@ -9,7 +9,8 @@
 9.	case
 10.	return
 11.	for
-12.	count
-13.	result
-14.	f
-15.	a
+12.	main
+13.	a
+14.	b
+15.	c
+16.	sum

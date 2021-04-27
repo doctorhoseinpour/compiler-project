@@ -8,6 +8,7 @@ hasLearntTheGrammar = False
 lookahead = None
 Ended = False
 ErrorFile = open('syntax_errors.txt', 'w')
+ErrorFileEmpty = True
 
 
 
@@ -23,7 +24,8 @@ class Grammar:
             line = line.replace('\n', '').split(' -> ')
             lhs = line[0].strip()
             rhs = [line[1].strip()]
-            if 'ε' in rhs: continue
+            if 'ε' in rhs: 
+                rhs = ['EPSILON']
             if lhs in cls.grammar.keys():
                 cls.grammar[lhs] = cls.grammar[lhs] + rhs
             else:
@@ -248,16 +250,21 @@ class Grammar:
     def get_first_rhs(cls, rhs):
         stuff = rhs.split(' ')
         firsts = []
+        hasEpsilon = False
         for i in stuff:
             if not cls.is_non_terminal(i):
                 firsts.append(i)
                 return firsts
             ifirst = cls.get_first(i).split('~')
             if 'EPSILON' in ifirst:
+                hasEpsilon = True
                 firsts = firsts + ifirst[:-1]
             else:
                 firsts = firsts + ifirst
                 return firsts
+        print('shtupid innit', hasEpsilon)
+        if hasEpsilon: 
+            firsts = firsts + ['EPSILON']
         return firsts
 
 
@@ -272,6 +279,11 @@ class Grammar:
 
 
 
+def kinda_snake_case(x):
+    for i in range(1, len(x) - 1):
+        if x[i].isupper():
+            x = x[:i] + '-' + x[i].lower() + x[i+1:]
+    return x
 
 
 class TreeMaker:
@@ -325,14 +337,11 @@ def match(terminal):
 
 
 
-count = 0
 def procedure(nonTerminal):
     global lookahead
     global Ended
-    global count
-    count = count + 1
-    if count > 200:
-        exit()
+    global ErrorFileEmpty
+
 
     if lookahead.tokenType in ['KEYWORD', 'SYMBOL']:
         la = lookahead.value
@@ -345,6 +354,7 @@ def procedure(nonTerminal):
     rhs = Grammar.get_rhs_grammars(nonTerminal)
     # print('RHS = ', rhs)
     for r in rhs:
+        if r == 'EPSILON': continue
         if Ended: return
 
         firsts = Grammar.get_first_rhs(r)
@@ -354,7 +364,8 @@ def procedure(nonTerminal):
                 if Ended: return
 
                 if Grammar.is_non_terminal(word):
-                    TreeMaker.appendNode(word, goIn=True)
+                    snakeCased = kinda_snake_case(word)
+                    TreeMaker.appendNode(snakeCased, goIn=True)
                     procedure(word)
                 else:
                     match(word)
@@ -369,15 +380,43 @@ def procedure(nonTerminal):
     else:
 
         # print(f"{colors.FAIL}\t\t#{scanner.lineNo} : follow of  {nonTerminal} : {Grammar.get_follow(nonTerminal)} {colors.ENDC}")
+
         if la in Grammar.get_follow(nonTerminal).split('~'):
             if 'EPSILON' in Grammar.get_first(nonTerminal).split('~'):
-                print(f"{colors.FAIL}\t\t#{scanner.lineNo} : EPSILON {nonTerminal}{colors.ENDC}")
-                TreeMaker.appendNode('epsilon', goIn=False)
-                TreeMaker.goUp()
-                return 
+                # is it nonTerminal -> epsilon     OR nonTerminal -> alpha -> epsilon ,...   is there a grammar from nonTerminal where RHS=esilon::: 'epsilon' in Grammar.grammar[nonTerminal] for i in nonTerminal.rhs if epsilon in i -> procedure(fucker)
+                if 'EPSILON' in rhs:
+                    print(f"{colors.FAIL}\t\t#{scanner.lineNo} : EPSILON {nonTerminal}{colors.ENDC}")
+                    TreeMaker.appendNode('epsilon', goIn=False)
+                    TreeMaker.goUp()
+                    return 
+                else: # nonTerminal ->+ epsilon        find which grammar(s) go to epsilon and call them
+                    print(f"{colors.FAIL}\t\t#{scanner.lineNo} : finding the fuckaa {nonTerminal} -> rhs = {rhs} {colors.ENDC}")
+                    for r in rhs:
+                        suspects = Grammar.get_first_rhs(r) 
+                        print('dabadeedabada', suspects)
+                        if 'EPSILON' in suspects:
+                            for word in r.split(' '):
+                                if Ended: return
+
+                                if Grammar.is_non_terminal(word):
+                                    snakeCased = kinda_snake_case(word)
+                                    TreeMaker.appendNode(snakeCased, goIn=True)
+                                    procedure(word)
+                                else:
+                                    match(word)
+                                    if lookahead.tokenType in ['KEYWORD', 'SYMBOL']:
+                                        la = lookahead.value
+                                    else:
+                                        la = lookahead.tokenType
+                            TreeMaker.goUp()
+                            return 
+                                
+
+
 
             print(f"{colors.FAIL}\t\t#{scanner.lineNo} : Missing {nonTerminal}{colors.ENDC}")
-            ErrorFile.write(f"#{scanner.lineNo} : Missing {nonTerminal}\n")
+            ErrorFile.write(f"#{scanner.lineNo} : syntax error, Missing {nonTerminal}\n")
+            ErrorFileEmpty = False
             #honestly idk what we're supposed to do here! :| 
             TreeMaker.goUp()
             return 
@@ -385,10 +424,12 @@ def procedure(nonTerminal):
             if (la == '$'):
                 print(f'{colors.FAIL}\t\t#{scanner.lineNo} : syntax error, unexpected EOF{colors.ENDC}')
                 ErrorFile.write(f'#{scanner.lineNo} : syntax error, unexpected EOF')
+                ErrorFileEmpty = False
                 Ended = True
             else:
                 print(f'{colors.FAIL}\t\t#{scanner.lineNo} : syntax error, illegal {la}{colors.ENDC}')
                 ErrorFile.write(f'#{scanner.lineNo} : syntax error, illegal {la}\n')
+                ErrorFileEmpty = False
                 next_lookahead()
                 procedure(nonTerminal)
             return
@@ -400,9 +441,12 @@ def procedure(nonTerminal):
 
 def next_lookahead():
     global lookahead
+    global ErrorFileEmpty
     
     if lookahead and lookahead.tokenType == '$': 
         TreeMaker.renderTreeInFile()
+        if ErrorFileEmpty:
+            ErrorFile.write("There is no syntax error.")
         ErrorFile.close()
         return
     
@@ -427,3 +471,6 @@ def startParsing():
 
 # lookahead = scanner.Token('KEYWORD', 'void')
 # procedure('Program')
+
+
+print(kinda_snake_case('(NUM, 12')) #Program-fucker-s

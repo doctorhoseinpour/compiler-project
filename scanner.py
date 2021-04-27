@@ -76,6 +76,7 @@ class Token:
             return Token("SYMBOL" , tokenString)
     
     def __str__(self):
+        if self.tokenType == '$': return '$'
         return f"({self.tokenType}, {self.value}) "
 
 
