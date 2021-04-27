@@ -352,13 +352,13 @@ def procedure(nonTerminal):
 
   
     rhs = Grammar.get_rhs_grammars(nonTerminal)
-    # print('RHS = ', rhs)
+    print('RHS = ', rhs)
     for r in rhs:
         if r == 'EPSILON': continue
         if Ended: return
 
         firsts = Grammar.get_first_rhs(r)
-        # print('\t r from rhs is:', r,  'firsts: ', firsts)
+        print('\t r from rhs is:', r,  'firsts: ', firsts)
         if la in firsts:
             for word in r.split(' '):
                 if Ended: return
@@ -466,11 +466,12 @@ def startParsing():
         #this is the end
 
 
-# Grammar.learnGrammar()
+Grammar.learnGrammar()
 # print(Grammar.get_first_rhs('SimpleExpressionPrime'))
 
-# lookahead = scanner.Token('KEYWORD', 'void')
-# procedure('Program')
+lookahead = scanner.Token('KEYWORD', 'for')
+procedure('Statement')
 
 
-print(kinda_snake_case('(NUM, 12')) #Program-fucker-s
+# print(kinda_snake_case('(NUM, 12')) #Program-fucker-s
+
