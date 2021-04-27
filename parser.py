@@ -7,6 +7,7 @@ from anytree import Node , RenderTree
 hasLearntTheGrammar = False
 lookahead = None
 Ended = False
+ErrorFile = open('syntax_errors.txt', 'w')
 
 
 
@@ -276,7 +277,7 @@ class Grammar:
 class TreeMaker:
 
     depth = 1
-    root = Node(name = "program" , parent = None)
+    root = Node(name = "Program" , parent = None)
     currentNode = root
     @classmethod
     def appendNode(cls, ID, goIn = False):
@@ -299,8 +300,13 @@ class TreeMaker:
     @classmethod
     def renderTreeInFile(cls):
         file = open("parse_tree.txt" , "w")
-        file.write()
-        file.close
+        for pre, _, node in RenderTree(cls.root):
+            file.write("%s%s\n" % (pre, node.name))
+        file.close()
+
+
+
+
 
 
 def match(terminal):
@@ -316,9 +322,6 @@ def match(terminal):
     else:
         print(f"{colors.FAIL}well fuck! @ match{colors.ENDC}")
     next_lookahead()
-
-
-
 
 
 
@@ -340,18 +343,18 @@ def procedure(nonTerminal):
 
   
     rhs = Grammar.get_rhs_grammars(nonTerminal)
-    print('RHS = ', rhs)
+    # print('RHS = ', rhs)
     for r in rhs:
         if Ended: return
 
         firsts = Grammar.get_first_rhs(r)
-        print('\t r from rhs is:', r,  'firsts: ', firsts)
+        # print('\t r from rhs is:', r,  'firsts: ', firsts)
         if la in firsts:
             for word in r.split(' '):
                 if Ended: return
 
                 if Grammar.is_non_terminal(word):
-                    TreeMaker.makeNode(word, goIn=True)
+                    TreeMaker.appendNode(word, goIn=True)
                     procedure(word)
                 else:
                     match(word)
@@ -365,23 +368,27 @@ def procedure(nonTerminal):
     #error handling
     else:
 
-        print(f"{colors.FAIL}\t\t#{scanner.lineNo} : follow of  {nonTerminal} : {Grammar.get_follow(nonTerminal)} {colors.ENDC}")
+        # print(f"{colors.FAIL}\t\t#{scanner.lineNo} : follow of  {nonTerminal} : {Grammar.get_follow(nonTerminal)} {colors.ENDC}")
         if la in Grammar.get_follow(nonTerminal).split('~'):
             if 'EPSILON' in Grammar.get_first(nonTerminal).split('~'):
-                TreeMaker.makeNode('epsilon', goIn=False)
+                print(f"{colors.FAIL}\t\t#{scanner.lineNo} : EPSILON {nonTerminal}{colors.ENDC}")
+                TreeMaker.appendNode('epsilon', goIn=False)
                 TreeMaker.goUp()
                 return 
 
             print(f"{colors.FAIL}\t\t#{scanner.lineNo} : Missing {nonTerminal}{colors.ENDC}")
+            ErrorFile.write(f"#{scanner.lineNo} : Missing {nonTerminal}\n")
             #honestly idk what we're supposed to do here! :| 
             TreeMaker.goUp()
             return 
         else:
             if (la == '$'):
                 print(f'{colors.FAIL}\t\t#{scanner.lineNo} : syntax error, unexpected EOF{colors.ENDC}')
+                ErrorFile.write(f'#{scanner.lineNo} : syntax error, unexpected EOF')
                 Ended = True
             else:
                 print(f'{colors.FAIL}\t\t#{scanner.lineNo} : syntax error, illegal {la}{colors.ENDC}')
+                ErrorFile.write(f'#{scanner.lineNo} : syntax error, illegal {la}\n')
                 next_lookahead()
                 procedure(nonTerminal)
             return
@@ -395,7 +402,8 @@ def next_lookahead():
     global lookahead
     
     if lookahead and lookahead.tokenType == '$': 
-        print(TreeMaker.depth)
+        TreeMaker.renderTreeInFile()
+        ErrorFile.close()
         return
     
     lookahead = scanner.get_next_token()
