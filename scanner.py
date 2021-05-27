@@ -43,16 +43,7 @@ class NotRegex:
                 return res
         return res
 
-symbol_table = []
-def install_id(*ids):
-    for id in ids:
-        if not id in symbol_table:
-            symbol_table.append(id)
-            ln = "\n"
-            if len(symbol_table) == 1:
-                ln = ""
-            table_file.write(f"{ln}{len(symbol_table)}.\t{id}")
-install_id(*reserved_keywords)
+
 
 class Token:
     def __init__(self, tokenType, value):
@@ -64,7 +55,6 @@ class Token:
         # print(stateNumber, " -> ", tokenString)
         global reserved_keywords
         if stateNumber == 2:
-            install_id(tokenString)
             if tokenString in reserved_keywords:
                 return Token("KEYWORD", tokenString)
             return Token("ID", tokenString)

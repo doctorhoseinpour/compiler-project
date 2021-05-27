@@ -2,19 +2,19 @@ Program -> Declaration-list $
 Declaration-list -> Declaration Declaration-list
 Declaration-list -> EPSILON 
 Declaration -> Declaration-initial Declaration-prime
-Declaration-initial ->  Type-specifier ID
+Declaration-initial ->  Type-specifier #saveinp ID
 Declaration-prime -> Fun-declaration-prime
 Declaration-prime -> Var-declaration-prime
-Var-declaration-prime -> ;
-Var-declaration-prime -> [ NUM ] ; 
+Var-declaration-prime -> ; #setvar
+Var-declaration-prime -> [ #pnum NUM ] ; #setarr
 Fun-declaration-prime ->  ( Params ) Compound-stmt
 Type-specifier -> int
 Type-specifier -> void
-Params -> int ID Param-prime Param-list
+Params -> int #saveinp ID #setvar Param-prime Param-list
 Params -> void Param-list-void-abtar
 Param-list-void-abtar -> ID Param-prime Param-list
 Param-list-void-abtar -> EPSILON
-Param-list -> , Param Param-list
+Param-list -> , Param #setvar Param-list
 Param-list -> EPSILON
 Param -> Declaration-initial Param-prime
 Param-prime -> [  ]
@@ -28,11 +28,11 @@ Statement -> Selection-stmt
 Statement -> Iteration-stmt
 Statement -> Return-stmt
 Statement -> For-stmt
-Expression-stmt -> Expression ;
+Expression-stmt -> Expression ; #pop
 Expression-stmt -> break ;
 Expression-stmt -> ;
-Selection-stmt -> if ( Expression ) Statement else Statement
-Iteration-stmt -> while ( Expression ) Statement
+Selection-stmt -> if ( Expression ) #save Statement else #jpf_save Statement #jp
+Iteration-stmt -> while #label ( Expression ) #save Statement #while
 Return-stmt -> return Return-stmt-prime
 Return-stmt-prime -> ;
 Return-stmt-prime -> Expression ;
@@ -42,40 +42,40 @@ Var-zegond -> , Var Var-zegond
 Var-zegond -> EPSILON
 Var -> ID Var-prime
 Expression -> Simple-expression-zegond
-Expression -> ID B
-B -> = Expression
-B -> [ Expression ] H
+Expression -> #pid ID B
+B -> = Expression #assign
+B -> [ Expression ] #index H
 B -> Simple-expression-prime
-H -> = Expression
+H -> = Expression #assign
 H -> G D C
 Simple-expression-zegond -> Additive-expression-zegond C
 Simple-expression-prime -> Additive-expression-prime C
-C -> Relop Additive-expression
+C -> #saveinp Relop Additive-expression #opperation
 C -> EPSILON
 Relop -> <
 Relop -> ==
 Additive-expression -> Term D
 Additive-expression-prime -> Term-prime D
 Additive-expression-zegond -> Term-zegond D
-D -> Addop Term D
+D -> #saveinp Addop Term #opperation D
 D -> EPSILON
 Addop -> +
 Addop -> -
 Term -> Signed-factor G
 Term-prime -> Signed-factor-prime G
 Term-zegond -> Signed-factor-zegond G
-G -> * Signed-factor G
+G -> * Signed-factor #mult G
 G -> EPSILON
 Signed-factor -> + Factor
-Signed-factor -> - Factor
+Signed-factor -> - Factor #Signed
 Signed-factor -> Factor
 Signed-factor-prime -> Factor-prime
 Signed-factor-zegond -> + Factor
-Signed-factor-zegond -> - Factor
+Signed-factor-zegond -> - Factor #Signed
 Signed-factor-zegond -> Factor-zegond
 Factor -> ( Expression )
-Factor -> ID Var-call-prime
-Factor -> NUM
+Factor -> #pid ID Var-call-prime
+Factor -> #pnum NUM
 Var-call-prime -> ( Args )
 Var-call-prime -> Var-prime
 Var-prime -> [ Expression ]
@@ -83,7 +83,7 @@ Var-prime -> EPSILON
 Factor-prime -> ( Args )
 Factor-prime -> EPSILON
 Factor-zegond -> ( Expression )
-Factor-zegond -> NUM
+Factor-zegond -> #pnum NUM
 Args -> Arg-list
 Args -> EPSILON
 Arg-list -> Expression Arg-list-prime
