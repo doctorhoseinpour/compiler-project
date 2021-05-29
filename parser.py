@@ -1,5 +1,5 @@
-import anytree
 import scanner
+import code_gen as codegen
 import Modules.camelToSnake as camelToSnake
 from anytree import Node , RenderTree
 
@@ -255,6 +255,7 @@ class Grammar:
         firsts = []
         hasEpsilon = False
         for i in stuff:
+            if i[0] == '#': continue
             if not cls.is_non_terminal(i):
                 firsts.append(i)
                 return firsts
@@ -362,6 +363,10 @@ def procedure(nonTerminal):
                 if Ended: return
                 if word == '': continue
 
+                if word[0] == '#':
+                    codegen.generateCode(lookahead, word)
+                    continue
+
                 if Grammar.is_non_terminal(word):
                     snakeCased = camelToSnake.kinda_snake_case(word)
                     TreeMaker.appendNode(snakeCased, goIn=True)
@@ -448,6 +453,7 @@ def startParsing():
     next_lookahead()
     procedure('Program')
     TreeMaker.renderTreeInFile()
+    codegen.write_pb()
     if ErrorFileEmpty:
         ErrorFile.write("There is no syntax error.")
     ErrorFile.close()
