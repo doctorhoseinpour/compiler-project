@@ -48,8 +48,6 @@ def init_var(varType , varId , slots):
     global pbIndex
     global symbol_table
 
-    # print(f"\n{cl.HEADER} initiating var -> {varType}: {varId} {cl.ENDC}\n")
-
     if varType == 'arr':
         arrAddress = get_tmp()
         arr = get_tmp(int(slots))
@@ -63,7 +61,6 @@ def init_var(varType , varId , slots):
 
 
 
-flag = True
 printFlag = False
 def generateCode(look_ahead , action):
     global flag
@@ -73,10 +70,9 @@ def generateCode(look_ahead , action):
     global pbIndex
     global wordLength
 
-    if action == '#while': flag = True
     if len(pb) > 0 and len(pb) < 100: printFlag = True 
     else: printFlag = False
-    if flag and printFlag:
+    if printFlag:
         print(len(pb))
         print(f"\n{cl.OKCYAN} ACTION:\t\t {action}  {cl.ENDC}")
         print(f"\n{cl.OKCYAN} LOOK AHEAD:\t\t {look_ahead} {cl.ENDC}")
@@ -195,8 +191,6 @@ def generateCode(look_ahead , action):
         endIndex = semanticStack.pop()
         X = semanticStack.pop()
         label = semanticStack.pop()
-        # print('endIndex ->', endIndex)
-        # print('pbIndex ->', pbIndex)
         fill_pb(endIndex , 'JPF' , X , '{}'.format(pbIndex + 1))
         fill_pb(pbIndex , 'JP' , label)
         pbIndex = pbIndex + 1
@@ -206,7 +200,7 @@ def generateCode(look_ahead , action):
             fill_pb(pbIndex , 'PRINT', semanticStack.pop())
             pbIndex += 1
 
-    if flag and printFlag:
+    if printFlag:
         print("\t\t||")
         print("\t\t||")
         print("\t\t\/")
