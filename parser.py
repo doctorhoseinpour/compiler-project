@@ -1,6 +1,5 @@
 import scanner
 import code_gen as codegen
-from Modules.colors import colors as cl
 import Modules.camelToSnake as camelToSnake
 from anytree import Node , RenderTree
 
