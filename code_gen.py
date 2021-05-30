@@ -1,3 +1,4 @@
+from Modules.colors import colors as cl
 # Globals
 symbol_table = []
 pbIndex = 0
@@ -10,12 +11,12 @@ def find_addr(look_ahead):
     global semanticStack
     global symbol_table
 
-    print("\n\n\t find addr for ")
-    print(str(look_ahead))
-    print("semanticStack = ")
-    print(semanticStack)
-    print("symbol_table = ")
-    print(symbol_table)
+    # print("\n\n\t find addr for ")
+    # print(str(look_ahead))
+    # print("semanticStack = ")
+    # print(semanticStack)
+    # print("symbol_table = ")
+    # print(symbol_table)
 
     for i in symbol_table:
         if look_ahead.value == i[1]:
@@ -28,6 +29,7 @@ def fill_pb(indx , op , A1 , A2 = '' , R = ''):
     while len(pb) <= indx:
         pb.append('')
     pb[indx] = f"({op}, {A1}, {A2}, {R})"
+    print(f"{cl.WARNING} PB = ( {op}, {A1}, {A2}, {R} ) {cl.ENDC}")
 
 def write_pb():
     global pb
@@ -55,7 +57,7 @@ def init_var(varType , varId , slots):
     global pbIndex
     global symbol_table
 
-    print(f'\n\ninit var   {varId}\n\n')
+    print(f"\n{cl.HEADER} initiating var -> {varType}: {varId} {cl.ENDC}\n")
 
     if varType == 'arr':
         arrAddress = get_tmp()
@@ -76,8 +78,10 @@ def generateCode(look_ahead , action):
     global pbIndex
     global wordLength
 
-    print(f"\t\t\t SS: {semanticStack}")
-    print(f"\t LA = {look_ahead} \t\t\t\t action = {action}\t \n\n")
+    print(f"\n{cl.OKCYAN} ACTION:\t\t {action}  {cl.ENDC}")
+    print(f"\n{cl.OKCYAN} LOOK AHEAD:\t\t {look_ahead} {cl.ENDC}")
+    print(f"\n{cl.OKCYAN} SS:\t\t\t {semanticStack} {cl.ENDC}")
+    print(f"\n{cl.OKCYAN} SYM_TABLE:\t\t {symbol_table} {cl.ENDC}")
 
     if action == '#pid':
         semanticStack.append(find_addr(look_ahead))
@@ -87,9 +91,7 @@ def generateCode(look_ahead , action):
     
     elif action == '#mult':
         tmp = get_tmp()
-        fill_pb(pbIndex , 'MULT' , semanticStack[len(semanticStack) - 1] , semanticStack[len(semanticStack) - 1] , tmp)
-        semanticStack.pop()
-        semanticStack.pop()
+        fill_pb(pbIndex , 'MULT' , semanticStack.pop() , semanticStack.pop() , tmp)
         pbIndex = pbIndex + 1
         semanticStack.append(tmp)
     
@@ -97,13 +99,18 @@ def generateCode(look_ahead , action):
         id = semanticStack.pop()
         typ = semanticStack.pop()
         init_var(typ, id, '')
+
+    elif action == '#setFunVar':
+        semanticStack.pop()
+        semanticStack.pop()
     
     elif action == '#setarr':
         arrSlots = semanticStack.pop()
         init_var('arr' , semanticStack.pop() , arrSlots[1:])
     
     elif action == '#assign':
-        fill_pb(pbIndex , 'ASSIGN' , semanticStack[len(semanticStack) - 1] , semanticStack[len(semanticStack) - 2])
+        print("\nASSIGN -> ssLen: ", len(semanticStack))
+        fill_pb(pbIndex , 'ASSIGN' , semanticStack[-1] , semanticStack[-2])
         semanticStack.pop()
         pbIndex = pbIndex + 1
     
@@ -181,3 +188,9 @@ def generateCode(look_ahead , action):
         fill_pb(pbIndex , 'JP' , label)
         pbIndex = pbIndex + 1
 
+    print("\t\t||")
+    print("\t\t||")
+    print("\t\t\/")
+    print(f"\n{cl.OKBLUE} SS:\t\t\t {semanticStack} {cl.ENDC}")
+    print(f"\n{cl.OKBLUE} SYM_TABLE:\t\t {symbol_table} {cl.ENDC}")
+    print("=========================================================")

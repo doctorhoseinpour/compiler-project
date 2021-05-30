@@ -7,7 +7,7 @@ Declaration-prime -> Fun-declaration-prime
 Declaration-prime -> Var-declaration-prime
 Var-declaration-prime -> ; #setvar
 Var-declaration-prime -> [ #pnum NUM ] ; #setarr
-Fun-declaration-prime -> #setvar ( Params ) Compound-stmt
+Fun-declaration-prime -> #setFunVar ( Params ) Compound-stmt
 Type-specifier -> #setType int
 Type-specifier -> #setType void
 Params -> int #saveinp ID #setvar Param-prime Param-list
