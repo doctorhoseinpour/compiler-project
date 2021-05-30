@@ -1,5 +1,6 @@
 import scanner
 import code_gen as codegen
+from Modules.colors import colors as cl
 import Modules.camelToSnake as camelToSnake
 from anytree import Node , RenderTree
 
@@ -332,6 +333,7 @@ def match(terminal):
 
     if terminal == la:
         TreeMaker.appendNode(str(lookahead), False)
+        print(f"\n\n{cl.OKGREEN} PARSER MATCH : {lookahead}  {cl.ENDC}\n\n")
     else:
         ErrorFile.write(f"#{scanner.lineNo} : syntax error, missing {terminal}\n")
         ErrorFileEmpty = False
@@ -438,6 +440,8 @@ def procedure(nonTerminal):
 def next_lookahead():
     global lookahead
     global ErrorFileEmpty
+
+    # TreeMaker.renderTreeInFile()
     
     if lookahead and lookahead.tokenType == '$':
         return

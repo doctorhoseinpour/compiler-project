@@ -10,14 +10,6 @@ wordLength = 4
 def find_addr(look_ahead):
     global semanticStack
     global symbol_table
-
-    # print("\n\n\t find addr for ")
-    # print(str(look_ahead))
-    # print("semanticStack = ")
-    # print(semanticStack)
-    # print("symbol_table = ")
-    # print(symbol_table)
-
     for i in symbol_table:
         if look_ahead.value == i[1]:
             return i[2]
@@ -57,7 +49,7 @@ def init_var(varType , varId , slots):
     global pbIndex
     global symbol_table
 
-    print(f"\n{cl.HEADER} initiating var -> {varType}: {varId} {cl.ENDC}\n")
+    # print(f"\n{cl.HEADER} initiating var -> {varType}: {varId} {cl.ENDC}\n")
 
     if varType == 'arr':
         arrAddress = get_tmp()
@@ -72,18 +64,30 @@ def init_var(varType , varId , slots):
 
 
 
-
+flag = True
+printFlag = False
 def generateCode(look_ahead , action):
+    global flag
+    global printFlag
     global semanticStack
+    global pb
     global pbIndex
     global wordLength
 
-    print(f"\n{cl.OKCYAN} ACTION:\t\t {action}  {cl.ENDC}")
-    print(f"\n{cl.OKCYAN} LOOK AHEAD:\t\t {look_ahead} {cl.ENDC}")
-    print(f"\n{cl.OKCYAN} SS:\t\t\t {semanticStack} {cl.ENDC}")
-    print(f"\n{cl.OKCYAN} SYM_TABLE:\t\t {symbol_table} {cl.ENDC}")
+    if action == '#while': flag = True
+    if len(pb) > 0 and len(pb) < 100: printFlag = True 
+    else: printFlag = False
+    if flag and printFlag:
+        print(len(pb))
+        print(f"\n{cl.OKCYAN} ACTION:\t\t {action}  {cl.ENDC}")
+        print(f"\n{cl.OKCYAN} LOOK AHEAD:\t\t {look_ahead} {cl.ENDC}")
+        print(f"\n{cl.OKCYAN} SS:\t\t\t {semanticStack} {cl.ENDC}")
+        print(f"\n{cl.OKCYAN} SYM_TABLE:\t\t {symbol_table} {cl.ENDC}")
 
     if action == '#pid':
+        if look_ahead.value == 'output':
+            semanticStack.append('output')
+            return
         semanticStack.append(find_addr(look_ahead))
     
     elif action == '#pnum':
@@ -95,21 +99,23 @@ def generateCode(look_ahead , action):
         pbIndex = pbIndex + 1
         semanticStack.append(tmp)
     
-    elif action == '#setvar':
+    elif action == '#initVar':
         id = semanticStack.pop()
         typ = semanticStack.pop()
         init_var(typ, id, '')
 
-    elif action == '#setFunVar':
+    elif action == '#initFunVar':
         semanticStack.pop()
         semanticStack.pop()
+        # just pop the name and type from ss
+        #will be completed in phase 4
     
-    elif action == '#setarr':
+    elif action == '#initArr':
         arrSlots = semanticStack.pop()
         init_var('arr' , semanticStack.pop() , arrSlots[1:])
     
     elif action == '#assign':
-        print("\nASSIGN -> ssLen: ", len(semanticStack))
+        # print("\nASSIGN -> ssLen: ", len(semanticStack))
         fill_pb(pbIndex , 'ASSIGN' , semanticStack[-1] , semanticStack[-2])
         semanticStack.pop()
         pbIndex = pbIndex + 1
@@ -119,7 +125,7 @@ def generateCode(look_ahead , action):
         addr = semanticStack.pop()
         tmp1 = get_tmp()
         tmp2 = get_tmp()
-        fill_pb(pbIndex , 'MULT' , '#{}'.format(wordLength) , tmp1)
+        fill_pb(pbIndex , 'MULT' , '#{}'.format(wordLength) , indx, tmp1)
         pbIndex = pbIndex + 1
         fill_pb(pbIndex , 'ASSIGN' , '@{}'.format(addr) , tmp2)
         pbIndex = pbIndex + 1
@@ -130,7 +136,7 @@ def generateCode(look_ahead , action):
     elif action == '#pop':
         semanticStack.pop()
     
-    elif action == '#saveinp':
+    elif action == '#saveID':
         semanticStack.append(look_ahead.value)
 
     elif action == "#setType":
@@ -156,7 +162,7 @@ def generateCode(look_ahead , action):
         pbIndex = pbIndex + 1
         semanticStack.append(tmp)
     
-    elif action == '#signed':
+    elif action == '#inverse':
         tmp = get_tmp()
         fill_pb(pbIndex , 'SUB' , '#0' , semanticStack.pop() , tmp)
         pbIndex = pbIndex + 1
@@ -177,24 +183,28 @@ def generateCode(look_ahead , action):
         jpFrom = semanticStack.pop()
         fill_pb(int(jpFrom) , 'JP' , pbIndex)
     
-    elif action == '#lable':
+    elif action == '#label':
         semanticStack.append(pbIndex)
     
     elif action == '#while':
         endIndex = semanticStack.pop()
         X = semanticStack.pop()
         label = semanticStack.pop()
+        # print('endIndex ->', endIndex)
+        # print('pbIndex ->', pbIndex)
         fill_pb(endIndex , 'JPF' , X , '{}'.format(pbIndex + 1))
         fill_pb(pbIndex , 'JP' , label)
         pbIndex = pbIndex + 1
     
     elif action == '#output':
-        fill_pb(pbIndex , 'PRINT', semanticStack.pop())
-        pbIndex += 1
+        if len(semanticStack) > 1 and semanticStack[-2] == 'output':
+            fill_pb(pbIndex , 'PRINT', semanticStack.pop())
+            pbIndex += 1
 
-    print("\t\t||")
-    print("\t\t||")
-    print("\t\t\/")
-    print(f"\n{cl.OKBLUE} SS:\t\t\t {semanticStack} {cl.ENDC}")
-    print(f"\n{cl.OKBLUE} SYM_TABLE:\t\t {symbol_table} {cl.ENDC}")
-    print("=========================================================")
+    if flag and printFlag:
+        print("\t\t||")
+        print("\t\t||")
+        print("\t\t\/")
+        print(f"\n{cl.OKBLUE} SS:\t\t\t {semanticStack} {cl.ENDC}")
+        print(f"\n{cl.OKBLUE} SYM_TABLE:\t\t {symbol_table} {cl.ENDC}")
+        print("=========================================================")

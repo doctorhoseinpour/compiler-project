@@ -2,19 +2,19 @@ Program -> Declaration-list $
 Declaration-list -> Declaration Declaration-list
 Declaration-list -> EPSILON 
 Declaration -> Declaration-initial Declaration-prime
-Declaration-initial -> Type-specifier #saveinp ID
+Declaration-initial -> Type-specifier #saveID ID
 Declaration-prime -> Fun-declaration-prime
 Declaration-prime -> Var-declaration-prime
-Var-declaration-prime -> ; #setvar
-Var-declaration-prime -> [ #pnum NUM ] ; #setarr
-Fun-declaration-prime -> #setFunVar ( Params ) Compound-stmt
+Var-declaration-prime -> ; #initVar
+Var-declaration-prime -> [ #pnum NUM ] ; #initArr
+Fun-declaration-prime -> #initFunVar ( Params ) Compound-stmt
 Type-specifier -> #setType int
 Type-specifier -> #setType void
-Params -> int #saveinp ID #setvar Param-prime Param-list
+Params -> int ID Param-prime Param-list
 Params -> void Param-list-void-abtar
 Param-list-void-abtar -> ID Param-prime Param-list
 Param-list-void-abtar -> EPSILON
-Param-list -> , Param #setvar Param-list
+Param-list -> , Param Param-list
 Param-list -> EPSILON
 Param -> Declaration-initial Param-prime
 Param-prime -> [  ]
@@ -50,14 +50,14 @@ H -> = Expression #assign
 H -> G D C
 Simple-expression-zegond -> Additive-expression-zegond C
 Simple-expression-prime -> Additive-expression-prime C
-C -> #saveinp Relop Additive-expression #opperation
+C -> #saveID Relop Additive-expression #opperation
 C -> EPSILON
 Relop -> <
 Relop -> ==
 Additive-expression -> Term D
 Additive-expression-prime -> Term-prime D
 Additive-expression-zegond -> Term-zegond D
-D -> #saveinp Addop Term #opperation D
+D -> #saveID Addop Term #opperation D
 D -> EPSILON
 Addop -> +
 Addop -> -
@@ -67,18 +67,18 @@ Term-zegond -> Signed-factor-zegond G
 G -> * Signed-factor #mult G
 G -> EPSILON
 Signed-factor -> + Factor
-Signed-factor -> - Factor #Signed
+Signed-factor -> - Factor #inverse
 Signed-factor -> Factor
 Signed-factor-prime -> Factor-prime
 Signed-factor-zegond -> + Factor
-Signed-factor-zegond -> - Factor #Signed
+Signed-factor-zegond -> - Factor #inverse
 Signed-factor-zegond -> Factor-zegond
 Factor -> ( Expression )
 Factor -> #pid ID Var-call-prime
 Factor -> #pnum NUM
 Var-call-prime -> ( Args #output )
 Var-call-prime -> Var-prime
-Var-prime -> [ Expression ]
+Var-prime -> [ Expression ] #index
 Var-prime -> EPSILON
 Factor-prime -> ( Args #output )
 Factor-prime -> EPSILON
