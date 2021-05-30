@@ -8,6 +8,15 @@ wordLength = 4
 
 def find_addr(look_ahead):
     global semanticStack
+    global symbol_table
+
+    print("\n\n\t find addr for ")
+    print(str(look_ahead))
+    print("semanticStack = ")
+    print(semanticStack)
+    print("symbol_table = ")
+    print(symbol_table)
+
     for i in symbol_table:
         if look_ahead.value == i[1]:
             return i[2]
@@ -46,6 +55,8 @@ def init_var(varType , varId , slots):
     global pbIndex
     global symbol_table
 
+    print(f'\n\ninit var   {varId}\n\n')
+
     if varType == 'arr':
         arrAddress = get_tmp()
         arr = get_tmp(int(slots))
@@ -53,9 +64,9 @@ def init_var(varType , varId , slots):
         pbIndex = pbIndex + 1
         symbol_table.append(('arr' , varId , arrAddress))
     
-    elif varType == 'int':
+    elif varType == 'int' or varType == 'void':
         intAddress = get_tmp()
-        symbol_table.append(('int' ,varId , intAddress))
+        symbol_table.append((varType ,varId , intAddress))
 
 
 
@@ -72,7 +83,7 @@ def generateCode(look_ahead , action):
         semanticStack.append(find_addr(look_ahead))
     
     elif action == '#pnum':
-        semanticStack.append('#{}'.format(look_ahead.value))
+        semanticStack.append(f'#{look_ahead.value}')
     
     elif action == '#mult':
         tmp = get_tmp()
@@ -83,7 +94,9 @@ def generateCode(look_ahead , action):
         semanticStack.append(tmp)
     
     elif action == '#setvar':
-        init_var('int' , semanticStack.pop() , '')
+        id = semanticStack.pop()
+        typ = semanticStack.pop()
+        init_var(typ, id, '')
     
     elif action == '#setarr':
         arrSlots = semanticStack.pop()
@@ -111,6 +124,9 @@ def generateCode(look_ahead , action):
         semanticStack.pop()
     
     elif action == '#saveinp':
+        semanticStack.append(look_ahead.value)
+
+    elif action == "#setType":
         semanticStack.append(look_ahead.value)
     
     elif action == '#opperation':

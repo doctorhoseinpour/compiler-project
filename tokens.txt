@@ -7,5 +7,4 @@
 8.	(ID, prod) (SYMBOL, =) (ID, i) (SYMBOL, *) (ID, prod) (SYMBOL, ;)
 9.	(ID, i) (SYMBOL, =) (ID, i) (SYMBOL, +) (NUM, 2) (SYMBOL, ;)
 10.	(SYMBOL, })
-11.	(ID, output) (SYMBOL, () (ID, prod) (SYMBOL, )) (SYMBOL, ;)
-12.	(SYMBOL, })
+11.	(ID, output)

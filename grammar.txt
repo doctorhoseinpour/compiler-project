@@ -2,14 +2,14 @@ Program -> Declaration-list $
 Declaration-list -> Declaration Declaration-list
 Declaration-list -> EPSILON 
 Declaration -> Declaration-initial Declaration-prime
-Declaration-initial ->  Type-specifier #saveinp ID
+Declaration-initial -> Type-specifier #saveinp ID
 Declaration-prime -> Fun-declaration-prime
 Declaration-prime -> Var-declaration-prime
 Var-declaration-prime -> ; #setvar
 Var-declaration-prime -> [ #pnum NUM ] ; #setarr
-Fun-declaration-prime ->  ( Params ) Compound-stmt
-Type-specifier -> int
-Type-specifier -> void
+Fun-declaration-prime -> #setvar ( Params ) Compound-stmt
+Type-specifier -> #setType int
+Type-specifier -> #setType void
 Params -> int #saveinp ID #setvar Param-prime Param-list
 Params -> void Param-list-void-abtar
 Param-list-void-abtar -> ID Param-prime Param-list
