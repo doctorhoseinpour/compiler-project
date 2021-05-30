@@ -57,7 +57,7 @@ Relop -> ==
 Additive-expression -> Term D
 Additive-expression-prime -> Term-prime D
 Additive-expression-zegond -> Term-zegond D
-D -> #saveID Addop Term #opperation D
+D -> #saveOperation Addop Term #opperation D
 D -> EPSILON
 Addop -> +
 Addop -> -

@@ -15,7 +15,6 @@ def find_addr(look_ahead):
             return i[2]
         
 
-
 def fill_pb(indx , op , A1 , A2 = '' , R = ''):
     global pb
     while len(pb) <= indx:
@@ -93,16 +92,15 @@ def generateCode(look_ahead , action):
     elif action == '#pnum':
         semanticStack.append(f'#{look_ahead.value}')
     
-    elif action == '#mult':
-        tmp = get_tmp()
-        fill_pb(pbIndex , 'MULT' , semanticStack.pop() , semanticStack.pop() , tmp)
-        pbIndex = pbIndex + 1
-        semanticStack.append(tmp)
-    
+
     elif action == '#initVar':
         id = semanticStack.pop()
         typ = semanticStack.pop()
         init_var(typ, id, '')
+
+    elif action == '#initArr':
+        arrSlots = semanticStack.pop()
+        init_var('arr' , semanticStack.pop() , arrSlots[1:])
 
     elif action == '#initFunVar':
         semanticStack.pop()
@@ -110,9 +108,6 @@ def generateCode(look_ahead , action):
         # just pop the name and type from ss
         #will be completed in phase 4
     
-    elif action == '#initArr':
-        arrSlots = semanticStack.pop()
-        init_var('arr' , semanticStack.pop() , arrSlots[1:])
     
     elif action == '#assign':
         # print("\nASSIGN -> ssLen: ", len(semanticStack))
@@ -133,8 +128,6 @@ def generateCode(look_ahead , action):
         pbIndex = pbIndex + 1
         semanticStack.append(f'@{tmp1}')
     
-    elif action == '#pop':
-        semanticStack.pop()
     
     elif action == '#saveID':
         semanticStack.append(look_ahead.value)
@@ -142,6 +135,15 @@ def generateCode(look_ahead , action):
     elif action == "#setType":
         semanticStack.append(look_ahead.value)
     
+    elif action == '#mult':
+        tmp = get_tmp()
+        fill_pb(pbIndex , 'MULT' , semanticStack.pop() , semanticStack.pop() , tmp)
+        pbIndex = pbIndex + 1
+        semanticStack.append(tmp)
+    
+    elif action == "#saveOperation":
+        semanticStack.append(look_ahead.value)
+
     elif action == '#opperation':
         var2 = semanticStack.pop()
         op = semanticStack.pop()
@@ -168,6 +170,9 @@ def generateCode(look_ahead , action):
         pbIndex = pbIndex + 1
         semanticStack.append(tmp)
     
+    elif action == '#pop':
+        semanticStack.pop()
+
     elif action == '#save':
         semanticStack.append(pbIndex)
         pbIndex = pbIndex + 1
