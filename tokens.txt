@@ -1,8 +1,0 @@
-2.	(KEYWORD, void) (ID, main) (SYMBOL, () (KEYWORD, void) (SYMBOL, )) (SYMBOL, {)
-3.	(KEYWORD, int) (ID, a) (SYMBOL, ;)
-4.	(KEYWORD, int) (ID, b) (SYMBOL, ;)
-5.	(ID, a) (SYMBOL, =) (NUM, 10) (SYMBOL, *) (NUM, 2) (SYMBOL, +) (NUM, 3) (SYMBOL, *) (SYMBOL, () (NUM, 1) (SYMBOL, <) (NUM, 0) (SYMBOL, )) (SYMBOL, ;)
-6.	(ID, b) (SYMBOL, =) (SYMBOL, () (ID, a) (SYMBOL, ==) (NUM, 5) (SYMBOL, )) (SYMBOL, *) (NUM, 4) (SYMBOL, +) (NUM, 3) (SYMBOL, ;)
-7.	(ID, output) (SYMBOL, () (ID, a) (SYMBOL, )) (SYMBOL, ;)
-8.	(ID, output) (SYMBOL, () (ID, b) (SYMBOL, )) (SYMBOL, ;)
-9.	(SYMBOL, })

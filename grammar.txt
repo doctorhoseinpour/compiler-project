@@ -76,11 +76,11 @@ Signed-factor-zegond -> Factor-zegond
 Factor -> ( Expression )
 Factor -> #pid ID Var-call-prime
 Factor -> #pnum NUM
-Var-call-prime -> ( Args )
+Var-call-prime -> ( Args #output )
 Var-call-prime -> Var-prime
 Var-prime -> [ Expression ]
 Var-prime -> EPSILON
-Factor-prime -> ( Args )
+Factor-prime -> ( Args #output )
 Factor-prime -> EPSILON
 Factor-zegond -> ( Expression )
 Factor-zegond -> #pnum NUM
