@@ -187,6 +187,10 @@ def generateCode(look_ahead , action):
         fill_pb(endIndex , 'JPF' , X , '{}'.format(pbIndex + 1))
         fill_pb(pbIndex , 'JP' , label)
         pbIndex = pbIndex + 1
+    
+    elif action == '#output':
+        fill_pb(pbIndex , 'PRINT', semanticStack.pop())
+        pbIndex += 1
 
     print("\t\t||")
     print("\t\t||")
