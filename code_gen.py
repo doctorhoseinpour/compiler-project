@@ -1,4 +1,3 @@
-from Modules.colors import colors as cl
 # Globals
 symbol_table = []
 pbIndex = 0
@@ -20,7 +19,6 @@ def fill_pb(indx , op , A1 , A2 = '' , R = ''):
     while len(pb) <= indx:
         pb.append('')
     pb[indx] = f"({op}, {A1}, {A2}, {R})"
-    print(f"{cl.WARNING} PB = ( {op}, {A1}, {A2}, {R} ) {cl.ENDC}")
 
 def write_pb():
     global pb
@@ -61,7 +59,6 @@ def init_var(varType , varId , slots):
 
 
 
-printFlag = False
 def generateCode(look_ahead , action):
     global flag
     global printFlag
@@ -69,15 +66,6 @@ def generateCode(look_ahead , action):
     global pb
     global pbIndex
     global wordLength
-
-    if len(pb) > 0 and len(pb) < 100: printFlag = True 
-    else: printFlag = False
-    if printFlag:
-        print(len(pb))
-        print(f"\n{cl.OKCYAN} ACTION:\t\t {action}  {cl.ENDC}")
-        print(f"\n{cl.OKCYAN} LOOK AHEAD:\t\t {look_ahead} {cl.ENDC}")
-        print(f"\n{cl.OKCYAN} SS:\t\t\t {semanticStack} {cl.ENDC}")
-        print(f"\n{cl.OKCYAN} SYM_TABLE:\t\t {symbol_table} {cl.ENDC}")
 
     if action == '#pid':
         if look_ahead.value == 'output':
@@ -106,7 +94,6 @@ def generateCode(look_ahead , action):
     
     
     elif action == '#assign':
-        # print("\nASSIGN -> ssLen: ", len(semanticStack))
         fill_pb(pbIndex , 'ASSIGN' , semanticStack[-1] , semanticStack[-2])
         semanticStack.pop()
         pbIndex = pbIndex + 1
@@ -199,11 +186,3 @@ def generateCode(look_ahead , action):
         if len(semanticStack) > 1 and semanticStack[-2] == 'output':
             fill_pb(pbIndex , 'PRINT', semanticStack.pop())
             pbIndex += 1
-
-    if printFlag:
-        print("\t\t||")
-        print("\t\t||")
-        print("\t\t\/")
-        print(f"\n{cl.OKBLUE} SS:\t\t\t {semanticStack} {cl.ENDC}")
-        print(f"\n{cl.OKBLUE} SYM_TABLE:\t\t {symbol_table} {cl.ENDC}")
-        print("=========================================================")
