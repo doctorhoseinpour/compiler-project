@@ -105,7 +105,7 @@ def generateCode(look_ahead , action):
         tmp2 = get_tmp()
         fill_pb(pbIndex , 'MULT' , '#{}'.format(wordLength) , indx, tmp1)
         pbIndex = pbIndex + 1
-        fill_pb(pbIndex , 'ASSIGN' , '@{}'.format(addr) , tmp2)
+        fill_pb(pbIndex , 'ASSIGN' , '#{}'.format(addr) , tmp2)
         pbIndex = pbIndex + 1
         fill_pb(pbIndex , 'ADD' , tmp1 , tmp2 , tmp1)
         pbIndex = pbIndex + 1
