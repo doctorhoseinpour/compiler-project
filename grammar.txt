@@ -1,4 +1,4 @@
-Program -> #scope_begin Declaration-list #scope_end $
+Program -> Declaration-list $
 Declaration-list -> Declaration Declaration-list
 Declaration-list -> EPSILON 
 Declaration -> Declaration-initial Declaration-prime
@@ -7,7 +7,7 @@ Declaration-prime -> Fun-declaration-prime
 Declaration-prime -> Var-declaration-prime
 Var-declaration-prime -> ; #initVar
 Var-declaration-prime -> [ #pnum NUM ] ; #initArr
-Fun-declaration-prime -> #initFunVar ( Params ) Compound-stmt
+Fun-declaration-prime ->  #special_save #start_symbol ( Params ) #label #init_variable #init_variable #startreturn Compound-stmt #endreturn #return_address #add_function_to_symbol_table #special_save_pair
 Type-specifier -> #setType int
 Type-specifier -> #setType void
 Params -> int ID Param-prime Param-list
@@ -29,11 +29,11 @@ Statement -> Iteration-stmt
 Statement -> Return-stmt
 Statement -> For-stmt
 Expression-stmt -> Expression ; #pop
-Expression-stmt -> break ;
+Expression-stmt -> break ; #break
 Expression-stmt -> ;
 Selection-stmt -> if ( Expression ) #save Statement else #jpf_save Statement #jp
-Iteration-stmt -> while #label ( Expression ) #save Statement #while
-Return-stmt -> return Return-stmt-prime
+Iteration-stmt -> while #label ( Expression ) #startbreak #save Statement #while #endbreak
+Return-stmt -> return Return-stmt-prime #return
 Return-stmt-prime -> ;
 Return-stmt-prime -> Expression ;
 For-stmt -> for #iteration_start ID = Vars #jmp_end #set_start_for Statement #jmp_start
@@ -76,11 +76,11 @@ Signed-factor-zegond -> Factor-zegond
 Factor -> ( Expression )
 Factor -> #pid ID Var-call-prime
 Factor -> #pnum NUM
-Var-call-prime -> ( Args #output )
+Var-call-prime -> ( Args #output ) #call_function
 Var-call-prime -> Var-prime
 Var-prime -> [ Expression ] #index
 Var-prime -> EPSILON
-Factor-prime -> ( Args #output )
+Factor-prime -> ( Args #output ) #call_function
 Factor-prime -> EPSILON
 Factor-zegond -> ( Expression )
 Factor-zegond -> #pnum NUM
