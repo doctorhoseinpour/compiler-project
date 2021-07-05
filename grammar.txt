@@ -36,9 +36,9 @@ Iteration-stmt -> while #label ( Expression ) #save Statement #while
 Return-stmt -> return Return-stmt-prime
 Return-stmt-prime -> ;
 Return-stmt-prime -> Expression ;
-For-stmt -> for ID = Vars Statement
-Vars -> Var Var-zegond
-Var-zegond -> , Var Var-zegond
+For-stmt -> for #iteration_start ID = Vars #jmp_end #set_start_for Statement #jmp_start
+Vars -> #save_for_var Var Var-zegond
+Var-zegond -> , #save_for_var Var Var-zegond
 Var-zegond -> EPSILON
 Var -> ID Var-prime
 Expression -> Simple-expression-zegond

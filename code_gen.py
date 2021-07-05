@@ -7,6 +7,7 @@ semanticStack = []
 scope_stack = []
 tmpAddr = 500
 wordLength = 4
+forElementsCount = 0
 
 def find_addr(look_ahead):
     global semanticStack
@@ -69,7 +70,9 @@ def generateCode(look_ahead , action):
     global semanticStack
     global pb
     global pbIndex
+    global scope_stack
     global wordLength
+    global forElementsCount
 
     if len(pb) > 0 and len(pb) < 100: printFlag = True 
     else: printFlag = False
@@ -102,10 +105,8 @@ def generateCode(look_ahead , action):
     elif action == '#initFunVar':
         semanticStack.pop()
         semanticStack.pop()
-        # just pop the name and type from ss
-        #will be completed in phase 4
-    
-    
+
+
     elif action == '#assign':
         # print("\nASSIGN -> ssLen: ", len(semanticStack))
         fill_pb(pbIndex , 'ASSIGN' , semanticStack[-1] , semanticStack[-2])
@@ -196,12 +197,46 @@ def generateCode(look_ahead , action):
         fill_pb(pbIndex , 'JP' , label)
         pbIndex = pbIndex + 1
     
+
+    #FOR
+    elif action == "#iteration_start":
+        semanticStack.append(find_addr(look_ahead))
+        t = get_tmp()
+        fill_pb(pbIndex, 'ASSIGN', pbIndex, t)
+        semanticStack.append(t)
+        pbIndex += 1
+        forElementsCount = 0
+
+    elif action == "#save_for_var":
+        fill_pb(pbIndex, 'ASSIGN', semanticStack[-1], find_addr(look_ahead))
+        pbIndex += 1
+        semanticStack.append(pbIndex)
+        pbIndex += 1
+        forElementsCount += 1
+    
+    elif action == "#jmp_end":
+        semanticStack.append(pbIndex)
+        pbIndex += 1
+
+    elif action == "#jmp_start":
+        fill_pb(semanticStack.pop(), 'JP', pbIndex + 2)
+        fill_pb(pbIndex, 'ADD', '#2', semanticStack[-1], semanticStack[-1])
+        fill_pb(pbIndex + 1, 'JP', semanticStack[-1])
+        pbIndex += 2
+
+    elif action == "#set_start_for":
+        jmp_end_index = semanticStack.pop()
+        for k in range (0, forElementsCount):
+            fill_pb(semanticStack.pop(), 'JP', pbIndex)
+        semanticStack.append(jmp_end_index)
+
+
+
+
     elif action == '#scope_start':
-        global scope_stack
         scope_stack.append(len(symbol_table))
 
     elif action == '#scope_end':
-        global scope_stack
         for i in range (0, scope_stack.pop()):
             symbol_table.pop()
 
