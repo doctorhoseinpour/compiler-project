@@ -176,10 +176,10 @@ def generateCode(look_ahead , action):
         for j in range(input_size):
             add_instruction_to_program_block(i, 'ASSIGN', SS[len(SS) - input_size + j], function_attributes[j + 1])
             i = i + 1
-        # assign return address
+        # assign return address after function compeletion
         add_instruction_to_program_block(i, 'ASSIGN', f'#{i + 2}', function_attributes[input_size + 1])
         i = i + 1
-        # go  to function
+        # go  to function //second initvar is for function location
         add_instruction_to_program_block(i, 'JP', function_attributes[0] + 1)
         i = i + 1
         for j in range(input_size + 1):

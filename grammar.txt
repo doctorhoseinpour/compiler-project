@@ -1,4 +1,4 @@
-Program -> Declaration-list $
+Program -> #scope_start Declaration-list #scope_end $
 Declaration-list -> Declaration Declaration-list
 Declaration-list -> EPSILON 
 Declaration -> Declaration-initial Declaration-prime
@@ -10,16 +10,16 @@ Var-declaration-prime -> [ #pnum NUM ] ; #initArr
 Fun-declaration-prime ->  #special_save #start_symbol ( Params ) #label #init_variable #init_variable #startreturn Compound-stmt #endreturn #return_address #add_function_to_symbol_table #special_save_pair
 Type-specifier -> #setType int
 Type-specifier -> #setType void
-Params -> int ID Param-prime Param-list
+Params -> int #saveID ID #initvar Param-prime Param-list
 Params -> void Param-list-void-abtar
 Param-list-void-abtar -> ID Param-prime Param-list
 Param-list-void-abtar -> EPSILON
-Param-list -> , Param Param-list
+Param-list -> , Param #initvar Param-list
 Param-list -> EPSILON
 Param -> Declaration-initial Param-prime
 Param-prime -> [  ]
 Param-prime -> EPSILON
-Compound-stmt -> { Declaration-list Statement-list }
+Compound-stmt -> {#scope_start Declaration-list Statement-list #scope_end}
 Statement-list -> Statement Statement-list
 Statement-list -> EPSILON
 Statement -> Expression-stmt
