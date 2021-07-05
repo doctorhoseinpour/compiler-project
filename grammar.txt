@@ -1,4 +1,4 @@
-Program -> Declaration-list $
+Program -> #scope_begin Declaration-list #scope_end $
 Declaration-list -> Declaration Declaration-list
 Declaration-list -> EPSILON 
 Declaration -> Declaration-initial Declaration-prime

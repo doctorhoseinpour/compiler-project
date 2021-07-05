@@ -4,13 +4,14 @@ symbol_table = []
 pbIndex = 0
 pb = []
 semanticStack = []
+scope_stack = []
 tmpAddr = 500
 wordLength = 4
 
 def find_addr(look_ahead):
     global semanticStack
     global symbol_table
-    for i in symbol_table:
+    for i in symbol_table[::-1]:
         if look_ahead.value == i[1]:
             return i[2]
         
@@ -195,6 +196,15 @@ def generateCode(look_ahead , action):
         fill_pb(pbIndex , 'JP' , label)
         pbIndex = pbIndex + 1
     
+    elif action == '#scope_start':
+        global scope_stack
+        scope_stack.append(len(symbol_table))
+
+    elif action == '#scope_end':
+        global scope_stack
+        for i in range (0, scope_stack.pop()):
+            symbol_table.pop()
+
     elif action == '#output':
         if len(semanticStack) > 1 and semanticStack[-2] == 'output':
             fill_pb(pbIndex , 'PRINT', semanticStack.pop())
