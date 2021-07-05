@@ -7,10 +7,10 @@ Declaration-prime -> Fun-declaration-prime
 Declaration-prime -> Var-declaration-prime
 Var-declaration-prime -> ; #initVar
 Var-declaration-prime -> [ #pnum NUM ] ; #initArr
-Fun-declaration-prime ->  #special_save #start_symbol ( Params ) #label #init_variable #init_variable #startreturn Compound-stmt #endreturn #return_address #add_function_to_symbol_table #special_save_pair
+Fun-declaration-prime ->  #initFunc ( Params ) #end_of_args Compound-stmt #endreturn #return_address #add_function_to_symbol_table #special_save_pair
 Type-specifier -> #setType int
 Type-specifier -> #setType void
-Params -> int #saveID ID #initvar Param-prime Param-list
+Params -> int #saveID ID Param-prime Param-list
 Params -> void Param-list-void-abtar
 Param-list-void-abtar -> ID Param-prime Param-list
 Param-list-void-abtar -> EPSILON

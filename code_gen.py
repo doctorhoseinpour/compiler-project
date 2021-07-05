@@ -1,4 +1,5 @@
 from Modules.colors import colors as cl
+from ActivationRecord import ActivationRecord, FuncObj
 # Globals
 symbol_table = []
 pbIndex = 0
@@ -76,7 +77,7 @@ def generateCode(look_ahead , action):
     global wordLength
     global forElementsCount
 
-    if len(pb) > 0 and len(pb) < 100: printFlag = True 
+    if len(pb) >= 0 and len(pb) < 100: printFlag = True 
     else: printFlag = False
     if printFlag:
         print(f'PBIndex -> {pbIndex}')
@@ -104,6 +105,29 @@ def generateCode(look_ahead , action):
         arrSlots = semanticStack.pop()
         init_var('arr' , semanticStack.pop() , arrSlots[1:])
 
+
+    elif action == "#initArg":
+        init_var(type)
+
+
+    elif action == "#initFunc":
+        f = FuncObj(name = semanticStack.pop(), typ = semanticStack.pop())
+        f.address = pbIndex + 1
+        f.args = []
+        semanticStack.append(f)
+        semanticStack.append('functionArgs')
+
+    elif action == "#end_of_args":
+        args = []
+        while(semanticStack[-1] != 'functionArgs'):
+            args.append(semanticStack.pop())
+        semanticStack.pop()
+        if not isinstance(semanticStack[-1], FuncObj):
+            print('end of args sucks ass')
+        semanticStack[-1].args = args
+
+        
+
     elif action == '#start_symbol':
         symbol_table.append('BEGINNING')
 
@@ -125,8 +149,7 @@ def generateCode(look_ahead , action):
         semanticStack.pop()
 
     elif action == '#init_variable':
-        tmp = get_tmp()
-        semanticStack.append(tmp)
+        semanticStack.append(get_tmp())
 
     elif action == '#return_address':
         funcName = semanticStack[-4]
