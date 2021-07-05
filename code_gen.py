@@ -22,7 +22,7 @@ def fill_pb(indx , op , A1 , A2 = '' , R = ''):
     while len(pb) <= indx:
         pb.append('')
     pb[indx] = f"({op}, {A1}, {A2}, {R})"
-    print(f"{cl.WARNING} PB = ( {op}, {A1}, {A2}, {R} ) {cl.ENDC}")
+    print(f"{cl.WARNING} PB[{indx}] = ( {op}, {A1}, {A2}, {R} ) {cl.ENDC}")
 
 def write_pb():
     global pb
@@ -77,7 +77,7 @@ def generateCode(look_ahead , action):
     if len(pb) > 0 and len(pb) < 100: printFlag = True 
     else: printFlag = False
     if printFlag:
-        print(len(pb))
+        print(f'PBIndex -> {pbIndex}')
         print(f"\n{cl.OKCYAN} ACTION:\t\t {action}  {cl.ENDC}")
         print(f"\n{cl.OKCYAN} LOOK AHEAD:\t\t {look_ahead} {cl.ENDC}")
         print(f"\n{cl.OKCYAN} SS:\t\t\t {semanticStack} {cl.ENDC}")
@@ -200,34 +200,38 @@ def generateCode(look_ahead , action):
 
     #FOR
     elif action == "#iteration_start":
-        semanticStack.append(find_addr(look_ahead))
         t = get_tmp()
-        fill_pb(pbIndex, 'ASSIGN', pbIndex, t)
-        semanticStack.append(t)
+        fill_pb(pbIndex, 'ASSIGN', f'#{pbIndex+1}', t)
+        semanticStack.append(t) # address of the i = x assignment
+        semanticStack.append(find_addr(look_ahead))
         pbIndex += 1
         forElementsCount = 0
 
     elif action == "#save_for_var":
-        fill_pb(pbIndex, 'ASSIGN', semanticStack[-1], find_addr(look_ahead))
+        iterator = semanticStack.pop()
+        fill_pb(pbIndex, 'ASSIGN', find_addr(look_ahead), iterator)
         pbIndex += 1
         semanticStack.append(pbIndex)
+        semanticStack.append(iterator)
         pbIndex += 1
         forElementsCount += 1
     
     elif action == "#jmp_end":
-        semanticStack.append(pbIndex)
+        semanticStack.append(pbIndex) # -> this pbIndex will later be filled with jp to the end of forstmt
         pbIndex += 1
 
     elif action == "#jmp_start":
         fill_pb(semanticStack.pop(), 'JP', pbIndex + 2)
-        fill_pb(pbIndex, 'ADD', '#2', semanticStack[-1], semanticStack[-1])
-        fill_pb(pbIndex + 1, 'JP', semanticStack[-1])
+        fill_pb(pbIndex, 'ADD', '#2', semanticStack[-2], semanticStack[-2])
+        fill_pb(pbIndex + 1, 'JP', f'@{semanticStack[-2]}')
         pbIndex += 2
 
     elif action == "#set_start_for":
         jmp_end_index = semanticStack.pop()
+        iterator = semanticStack.pop()
         for k in range (0, forElementsCount):
             fill_pb(semanticStack.pop(), 'JP', pbIndex)
+        semanticStack.append(iterator)
         semanticStack.append(jmp_end_index)
 
 

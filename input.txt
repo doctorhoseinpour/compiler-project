@@ -2,11 +2,14 @@
 void main(void){
 	int a;
 	int b;
+	int c;
+	int d;
+	int i;  
 	a = 10;
-	b = 0;
-	int i;
-	output(a);
-	for i = a, b {
+	b = 11;
+	c = -120;
+	d = 9;
+	for i = a, b, d, c, a, a, a, a, a, c {
 		output(i);
 	}
 }
