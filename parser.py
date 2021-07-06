@@ -2,7 +2,7 @@ import scanner
 import code_gen as codegen
 from Modules.colors import colors as cl
 import Modules.camelToSnake as camelToSnake
-from anytree import Node , RenderTree
+# from anytree import Node , RenderTree
 
 #Global flags
 hasLearntTheGrammar = False
@@ -286,37 +286,41 @@ class Grammar:
 class TreeMaker:
 
     depth = 1
-    root = Node(name = "Program" , parent = None)
-    currentNode = root
+    # root = Node(name = "Program" , parent = None)
+    # currentNode = root
     @classmethod
     def appendNode(cls, ID, goIn = False):
-        new_node = Node(name = ID , parent = cls.currentNode)
-        if goIn:
-            cls.currentNode = new_node
-            cls.depth = cls.depth + 1
+        # new_node = Node(name = ID , parent = cls.currentNode)
+        # if goIn:
+            # cls.currentNode = new_node
+            # cls.depth = cls.depth + 1
+        return
 
     @classmethod
     def goUp(cls):
-        if cls.currentNode.parent:
-            cls.currentNode = cls.currentNode.parent
-            cls.depth = cls.depth - 1
+        return
+        # if cls.currentNode.parent:
+            # cls.currentNode = cls.currentNode.parent
+            # cls.depth = cls.depth - 1
 
 
     @classmethod
     def deleteCurrentNode(cls):
-        if cls.currentNode.parent == None: return 
-        temp = cls.currentNode.parent
-        cls.currentNode.parent = None
-        cls.currentNode = temp
-        cls.depth = cls.depth - 1
+        return
+        # if cls.currentNode.parent == None: return 
+        # temp = cls.currentNode.parent
+        # cls.currentNode.parent = None
+        # cls.currentNode = temp
+        # cls.depth = cls.depth - 1
         
 
     @classmethod
     def renderTreeInFile(cls):
-        file = open("parse_tree.txt" , "w")
-        for pre, _, node in RenderTree(cls.root):
-            file.write("%s%s\n" % (pre, node.name))
-        file.close()
+        return
+        # file = open("parse_tree.txt" , "w")
+        # for pre, _, node in RenderTree(cls.root):
+            # file.write("%s%s\n" % (pre, node.name))
+        # file.close()
 
 
 
