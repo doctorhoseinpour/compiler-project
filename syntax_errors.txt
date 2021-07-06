@@ -1,1 +1,1 @@
-#2 : syntax error, missing Compound-stmt
+There is no syntax error.

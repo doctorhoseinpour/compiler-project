@@ -14,9 +14,14 @@ returnQ = []
 def find_addr(look_ahead):
     global semanticStack
     global symbol_table
+    if look_ahead.value == 'arr':
+        print('cuck')
     for i in symbol_table[::-1]:
         if look_ahead.value == i[1]:
+                # print(i)
+                # print(i[2])
             return i[2]
+    print('double cuck')
         
 
 def fill_pb(indx , op , A1 , A2 = '' , R = ''):
@@ -76,7 +81,7 @@ def generateCode(look_ahead , action):
     global wordLength
     global forElementsCount
 
-    if len(pb) > 0 and len(pb) < 100: printFlag = True 
+    if len(pb) >= 0 and len(pb) < 100: printFlag = True 
     else: printFlag = False
     if printFlag:
         print(f'PBIndex -> {pbIndex}')
@@ -84,6 +89,7 @@ def generateCode(look_ahead , action):
         print(f"\n{cl.OKCYAN} LOOK AHEAD:\t\t {look_ahead} {cl.ENDC}")
         print(f"\n{cl.OKCYAN} SS:\t\t\t {semanticStack} {cl.ENDC}")
         print(f"\n{cl.OKCYAN} SYM_TABLE:\t\t {symbol_table} {cl.ENDC}")
+        print(f"\n{cl.OKCYAN} SCOPE_STACK:\t\t {scope_stack} {cl.ENDC}")
 
     if action == '#pid':
         if look_ahead.value == 'output':
@@ -103,6 +109,7 @@ def generateCode(look_ahead , action):
     elif action == '#initArr':
         arrSlots = semanticStack.pop()
         init_var('arr' , semanticStack.pop() , arrSlots[1:])
+        semanticStack.pop()
 
     elif action == '#start_symbol':
         symbol_table.append('BEGINNING')
@@ -152,6 +159,10 @@ def generateCode(look_ahead , action):
     elif action == '#return':
         value = semanticStack.pop()
         returnQ.append((pbIndex, value))
+        pbIndex = pbIndex + 2
+    
+    elif action == "#empty_return":
+        returnQ.append((pbIndex, '#0'))
         pbIndex = pbIndex + 2
 
     elif action == '#startreturn':
@@ -214,6 +225,7 @@ def generateCode(look_ahead , action):
             pbIndex = pbIndex + 1
         else:
             fill_pb(semanticStack.pop(), 'JP', pbIndex)
+        semanticStack.pop()
 
 
     elif action == '#assign':
@@ -333,6 +345,8 @@ def generateCode(look_ahead , action):
         fill_pb(semanticStack.pop(), 'JP', pbIndex + 2)
         fill_pb(pbIndex, 'ADD', '#2', semanticStack[-2], semanticStack[-2])
         fill_pb(pbIndex + 1, 'JP', f'@{semanticStack[-2]}')
+        semanticStack.pop()
+        semanticStack.pop() 
         pbIndex += 2
 
     elif action == "#set_start_for":
@@ -340,6 +354,7 @@ def generateCode(look_ahead , action):
         iterator = semanticStack.pop()
         for k in range (0, forElementsCount):
             fill_pb(semanticStack.pop(), 'JP', pbIndex)
+        forElementsCount = 0
         semanticStack.append(iterator)
         semanticStack.append(jmp_end_index)
 
@@ -350,7 +365,7 @@ def generateCode(look_ahead , action):
         scope_stack.append(len(symbol_table))
 
     elif action == '#scope_end':
-        for i in range (0, scope_stack.pop()):
+        for i in range (0, len(symbol_table) - scope_stack.pop()):
             symbol_table.pop()
 
     elif action == '#output':
