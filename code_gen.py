@@ -10,6 +10,7 @@ wordLength = 4
 forElementsCount = 0
 breakQ = []
 returnQ = []
+functionCallArgsCount = 0
 
 def find_addr(look_ahead):
     global semanticStack
@@ -17,7 +18,7 @@ def find_addr(look_ahead):
     for i in symbol_table[::-1]:
         if look_ahead.value == i[1]:
             return i[2]
-    ### semantic error ###
+    semanticError('scope error')
         
 
 def fill_pb(indx , op , A1 , A2 = '' , R = ''):
@@ -34,7 +35,8 @@ def write_pb():
         output_file.write(f"{index}\t{i}\n")
     output_file.close()
 
-
+def semanticError(message = ''):
+    print("baboo")
 
 
 def get_tmp(slots = 1):
@@ -65,6 +67,47 @@ def init_var(varType , varId , slots):
         symbol_table.append((varType ,varId , intAddress))
 
 
+def functionCall():
+    global semanticStack
+    global pbIndex
+    global functionCallArgsCount
+
+    if semanticStack[-1] == 'output': return
+    ssLen = len(semanticStack)
+    funcArgs = []
+    
+    for s in semanticStack[::-1]:
+        if isinstance(s, list):
+            funcArgs = s
+            break;
+    
+    inputLen = len(funcArgs) - 3
+
+    if inputLen != inputLen:
+        semanticError("args length error")
+
+    # assign function inputs
+    for i in range(inputLen):
+        fill_pb(pbIndex, 'ASSIGN', semanticStack[ssLen - inputLen + i], funcArgs[i + 1])
+        pbIndex = pbIndex + 1
+
+    # assign return address after function compeletion
+    fill_pb(pbIndex, 'ASSIGN', f'#{pbIndex + 2}', funcArgs[inputLen + 1])
+    pbIndex = pbIndex + 1
+
+    # go  to function //second initvar is for function location
+    fill_pb(pbIndex, 'JP', funcArgs[0] + 1)
+    pbIndex = pbIndex + 1
+    for i in range(inputLen + 1):
+        semanticStack.pop()
+        
+    # create a new variable and assign function output to it
+    addr = get_tmp()
+    semanticStack.append(addr)
+    fill_pb(pbIndex, 'ASSIGN', funcArgs[inputLen + 2], addr)
+    pbIndex = pbIndex + 1
+
+
 
 printFlag = False
 def generateCode(look_ahead , action):
@@ -76,6 +119,7 @@ def generateCode(look_ahead , action):
     global scope_stack
     global wordLength
     global forElementsCount
+    global functionCallArgsCount
 
     if len(pb) >= 0 and len(pb) < 100: printFlag = True 
     else: printFlag = False
@@ -101,24 +145,26 @@ def generateCode(look_ahead , action):
         id = semanticStack.pop()
         typ = semanticStack.pop()
         if typ == 'void':
-            pass
-            ### semantic error ###
+            semanticError('void var init')
         init_var(typ, id, '')
 
     elif action == '#initArr':
         arrSlots = semanticStack.pop()
         id = semanticStack.pop()
         if semanticStack.pop() == 'void':
-            ### semantic error ###
-            pass
+            semanticError('void var init')
         
         init_var('arr' , id , arrSlots[1:])
 
-    elif action == '#start_symbol':
+    elif action == '#FuncStart':
+        stackTop = semanticStack.pop()
+        semanticStack.append(pbIndex)
+        semanticStack.append(stackTop)
+        pbIndex = pbIndex + 1
         symbol_table.append('BEGINNING')
 
-    elif action == '#add_function_to_symbol_table':
-        
+
+    elif action == '#addFuncToSymTable':
         funcAttr = []
         latestSymbol = symbol_table.pop()
         while latestSymbol != 'BEGINNING':
@@ -129,14 +175,21 @@ def generateCode(look_ahead , action):
         funcAttr.append(semanticStack[-2])
         funcAttr.append(semanticStack[-1])
         symbol_table.append(('FUNC', semanticStack[-4], funcAttr))
-        semanticStack.pop()
-        semanticStack.pop()
-        semanticStack.pop()
+        for _ in range(4): semanticStack.pop()
+
+        if symbol_table[-1][1] == 'main':
+            tmp = get_tmp()
+            fill_pb(semanticStack.pop(), 'ADD', '#0', '#0', tmp)
+            pbIndex = pbIndex + 1
+        else:
+            fill_pb(semanticStack.pop(), 'JP', pbIndex)
         semanticStack.pop()
 
-    elif action == '#init_variable':
-        tmp = get_tmp()
-        semanticStack.append(tmp)
+
+    elif action == '#init_func_variables':
+        for _ in range(2):
+            tmp = get_tmp()
+            semanticStack.append(tmp)
 
     elif action == '#return_address':
         funcName = semanticStack[-4]
@@ -168,71 +221,24 @@ def generateCode(look_ahead , action):
         returnQ.append((pbIndex, '#0'))
         pbIndex = pbIndex + 2
 
-    elif action == '#startreturn':
+    elif action == '#return_start':
         returnQ.append(('begin', '#0'))
 
-    elif action == '#endreturn':
+    elif action == '#return_end':
         index = returnQ.pop()
         while index[0] != 'begin':
             fill_pb(index[0], 'ASSIGN', index[1], semanticStack[-1])
             fill_pb(index[0] + 1, 'JP', pbIndex)
             index = returnQ.pop()
 
-    elif action == '#call_function':
-        if semanticStack[-1] == 'output':
-            return
-        ssLen = len(semanticStack)
-        funcArgs = []
+    elif action == '#FunctionCall':
+        functionCall()
+        functionCallArgsCount = 0
 
-        
-        for i in range(ssLen - 1, -1, -1):
-            if isinstance(semanticStack[i], list):
-                funcArgs = semanticStack[i]
-        
-        
-        inpLen = len(funcArgs) - 3
-        # assign function inputs
-        for i in range(inpLen):
-            fill_pb(pbIndex, 'ASSIGN', semanticStack[ssLen - inpLen + i], funcArgs[i + 1])
-            pbIndex = pbIndex + 1
-
-
-        # assign return address after function compeletion
-        fill_pb(pbIndex, 'ASSIGN', f'#{pbIndex + 2}', funcArgs[inpLen + 1])
-        pbIndex = pbIndex + 1
-
-
-        # go  to function //second initvar is for function location
-        fill_pb(pbIndex, 'JP', funcArgs[0] + 1)
-        pbIndex = pbIndex + 1
-        for i in range(inpLen + 1):
-            semanticStack.pop()
-
-            
-        # create a new variable and assign function output to it
-        addr = get_tmp()
-        semanticStack.append(addr)
-        fill_pb(pbIndex, 'ASSIGN', funcArgs[inpLen + 2], addr)
-        pbIndex = pbIndex + 1
-
-    elif action == '#special_save':
-        stackTop = semanticStack.pop()
-        semanticStack.append(pbIndex)
-        semanticStack.append(stackTop)
-        pbIndex = pbIndex + 1
-
-    elif action == '#special_save_pair':
-        if symbol_table[-1][1] == 'main':
-            tmp = get_tmp()
-            fill_pb(semanticStack.pop(), 'ADD', '#0', '#0', tmp)
-            pbIndex = pbIndex + 1
-        else:
-            fill_pb(semanticStack.pop(), 'JP', pbIndex)
-        semanticStack.pop()
-
+    elif action == "#funcArgGiven":
+        functionCallArgsCount += 1
 
     elif action == '#assign':
-        # print("\nASSIGN -> ssLen: ", len(semanticStack))
         fill_pb(pbIndex , 'ASSIGN' , semanticStack[-1] , semanticStack[-2])
         semanticStack.pop()
         pbIndex = pbIndex + 1
@@ -244,7 +250,7 @@ def generateCode(look_ahead , action):
         tmp2 = get_tmp()
         fill_pb(pbIndex , 'MULT' , '#{}'.format(wordLength) , indx, tmp1)
         pbIndex = pbIndex + 1
-        fill_pb(pbIndex , 'ASSIGN' , '#{}'.format(addr) , tmp2)
+        fill_pb(pbIndex , 'ASSIGN' , '@{}'.format(addr) , tmp2)
         pbIndex = pbIndex + 1
         fill_pb(pbIndex , 'ADD' , tmp1 , tmp2 , tmp1)
         pbIndex = pbIndex + 1
