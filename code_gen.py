@@ -14,14 +14,10 @@ returnQ = []
 def find_addr(look_ahead):
     global semanticStack
     global symbol_table
-    if look_ahead.value == 'arr':
-        print('cuck')
     for i in symbol_table[::-1]:
         if look_ahead.value == i[1]:
-                # print(i)
-                # print(i[2])
             return i[2]
-    print('double cuck')
+    ### semantic error ###
         
 
 def fill_pb(indx , op , A1 , A2 = '' , R = ''):
@@ -104,12 +100,19 @@ def generateCode(look_ahead , action):
     elif action == '#initVar':
         id = semanticStack.pop()
         typ = semanticStack.pop()
+        if typ == 'void':
+            pass
+            ### semantic error ###
         init_var(typ, id, '')
 
     elif action == '#initArr':
         arrSlots = semanticStack.pop()
-        init_var('arr' , semanticStack.pop() , arrSlots[1:])
-        semanticStack.pop()
+        id = semanticStack.pop()
+        if semanticStack.pop() == 'void':
+            ### semantic error ###
+            pass
+        
+        init_var('arr' , id , arrSlots[1:])
 
     elif action == '#start_symbol':
         symbol_table.append('BEGINNING')
