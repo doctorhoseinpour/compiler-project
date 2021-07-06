@@ -167,28 +167,39 @@ def generateCode(look_ahead , action):
     elif action == '#call_function':
         if semanticStack[-1] == 'output':
             return
-        function_attributes = []
-        for j in range(len(SS) - 1, -1, -1):
-            if isinstance(SS[j], list):
-                function_attributes = SS[j]
-        input_size = len(function_attributes) - 3
+        ssLen = len(semanticStack)
+        funcArgs = []
+
+        
+        for i in range(ssLen - 1, -1, -1):
+            if isinstance(semanticStack[i], list):
+                funcArgs = semanticStack[i]
+        
+        
+        inpLen = len(funcArgs) - 3
         # assign function inputs
-        for j in range(input_size):
-            add_instruction_to_program_block(i, 'ASSIGN', SS[len(SS) - input_size + j], function_attributes[j + 1])
-            i = i + 1
+        for i in range(inpLen):
+            fill_pb(pbIndex, 'ASSIGN', semanticStack[ssLen - inpLen + i], funcArgs[i + 1])
+            pbIndex = pbIndex + 1
+
+
         # assign return address after function compeletion
-        add_instruction_to_program_block(i, 'ASSIGN', f'#{i + 2}', function_attributes[input_size + 1])
-        i = i + 1
+        fill_pb(pbIndex, 'ASSIGN', f'#{pbIndex + 2}', funcArgs[inpLen + 1])
+        pbIndex = pbIndex + 1
+
+
         # go  to function //second initvar is for function location
-        add_instruction_to_program_block(i, 'JP', function_attributes[0] + 1)
-        i = i + 1
-        for j in range(input_size + 1):
-            SS.pop()
+        fill_pb(pbIndex, 'JP', funcArgs[0] + 1)
+        pbIndex = pbIndex + 1
+        for i in range(inpLen + 1):
+            semanticStack.pop()
+
+            
         # create a new variable and assign function output to it
-        address = get_temporary_variables()
-        SS.append(address)
-        add_instruction_to_program_block(i, 'ASSIGN', function_attributes[input_size + 2], address)
-        i = i + 1
+        addr = get_tmp()
+        semanticStack.append(addr)
+        fill_pb(pbIndex, 'ASSIGN', funcArgs[inpLen + 2], addr)
+        pbIndex = pbIndex + 1
 
     elif action == '#special_save':
         stackTop = semanticStack.pop()
