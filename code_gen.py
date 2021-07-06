@@ -1,4 +1,3 @@
-from Modules.colors import colors as cl
 # Globals
 symbol_table = []
 pbIndex = 0
@@ -26,7 +25,6 @@ def fill_pb(indx , op , A1 , A2 = '' , R = ''):
     while len(pb) <= indx:
         pb.append('')
     pb[indx] = f"({op}, {A1}, {A2}, {R})"
-    print(f"{cl.WARNING} PB[{indx}] = ( {op}, {A1}, {A2}, {R} ) {cl.ENDC}")
 
 def write_pb():
     global pb
@@ -36,7 +34,7 @@ def write_pb():
     output_file.close()
 
 def semanticError(message = ''):
-    print("baboo")
+    return
 
 
 def get_tmp(slots = 1):
@@ -109,10 +107,8 @@ def functionCall():
 
 
 
-printFlag = False
+
 def generateCode(look_ahead , action):
-    global flag
-    global printFlag
     global semanticStack
     global pb
     global pbIndex
@@ -120,16 +116,6 @@ def generateCode(look_ahead , action):
     global wordLength
     global forElementsCount
     global functionCallArgsCount
-
-    if len(pb) >= 0 and len(pb) < 100: printFlag = True 
-    else: printFlag = False
-    if printFlag:
-        print(f'PBIndex -> {pbIndex}')
-        print(f"\n{cl.OKCYAN} ACTION:\t\t {action}  {cl.ENDC}")
-        print(f"\n{cl.OKCYAN} LOOK AHEAD:\t\t {look_ahead} {cl.ENDC}")
-        print(f"\n{cl.OKCYAN} SS:\t\t\t {semanticStack} {cl.ENDC}")
-        print(f"\n{cl.OKCYAN} SYM_TABLE:\t\t {symbol_table} {cl.ENDC}")
-        print(f"\n{cl.OKCYAN} SCOPE_STACK:\t\t {scope_stack} {cl.ENDC}")
 
     if action == '#pid':
         if look_ahead.value == 'output':
@@ -381,11 +367,3 @@ def generateCode(look_ahead , action):
         if len(semanticStack) > 1 and semanticStack[-2] == 'output':
             fill_pb(pbIndex , 'PRINT', semanticStack.pop())
             pbIndex += 1
-
-    if printFlag:
-        print("\t\t||")
-        print("\t\t||")
-        print("\t\t\/")
-        print(f"\n{cl.OKBLUE} SS:\t\t\t {semanticStack} {cl.ENDC}")
-        print(f"\n{cl.OKBLUE} SYM_TABLE:\t\t {symbol_table} {cl.ENDC}")
-        print("=========================================================")

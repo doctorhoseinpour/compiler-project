@@ -333,7 +333,6 @@ def match(terminal):
 
     if terminal == la:
         TreeMaker.appendNode(str(lookahead), False)
-        print(f"\n\n{cl.OKGREEN} PARSER MATCH : {lookahead}  {cl.ENDC}\n\n")
     else:
         ErrorFile.write(f"#{scanner.lineNo} : syntax error, missing {terminal}\n")
         ErrorFileEmpty = False
