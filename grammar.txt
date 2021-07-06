@@ -32,11 +32,11 @@ Expression-stmt -> Expression ; #pop
 Expression-stmt -> break ; #break
 Expression-stmt -> ;
 Selection-stmt -> if ( Expression ) #save Statement else #jpf_save Statement #jp
-Iteration-stmt -> while #label ( Expression ) #startbreak #save Statement #while #endbreak
+Iteration-stmt -> while #label ( Expression ) #break_start #save Statement #while #break_end
 Return-stmt -> return Return-stmt-prime
 Return-stmt-prime -> #empty_return ;
 Return-stmt-prime -> Expression #return ;
-For-stmt -> for #iteration_start ID = Vars #jmp_end #set_start_for Statement #jmp_start
+For-stmt -> for #iteration_start ID = Vars #jmp_end #set_start_for #break_start Statement #break_end #jmp_start
 Vars -> #save_for_var Var Var-zegond
 Var-zegond -> , #save_for_var Var Var-zegond
 Var-zegond -> EPSILON

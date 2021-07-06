@@ -1,3 +1,4 @@
+import scanner
 # Globals
 symbol_table = []
 pbIndex = 0
@@ -10,6 +11,26 @@ forElementsCount = 0
 breakQ = []
 returnQ = []
 functionCallArgsCount = 0
+semanticErrorFile = open('semantic_errors.txt' , 'w')
+semanticErrorFileEmpty = True
+
+
+def semanticError(message = '', lineOffset = 0):
+    global semanticErrorFileEmpty
+    lineNo = scanner.lineNo
+    if semanticErrorFileEmpty:
+        semanticErrorFileEmpty = False
+    semanticErrorFile.write(f'#{lineNo - lineOffset} : Semantic Error! {message}\n')
+
+
+def get_type(addr):
+    global symbol_table
+    if addr.startswith('#'):
+        return 'int'
+    for i in symbol_table[::-1]:
+        if addr == i[2]:
+            return i[0] 
+
 
 def find_addr(look_ahead):
     global semanticStack
@@ -17,7 +38,13 @@ def find_addr(look_ahead):
     for i in symbol_table[::-1]:
         if look_ahead.value == i[1]:
             return i[2]
-    semanticError('scope error')
+    semanticError(f'\'{look_ahead.value}\' is not defined')
+
+def find_name(addr):
+    global symbol_table
+    for i in symbol_table[::-1]:
+        if addr == i[2]:
+            return i[1]
         
 
 def fill_pb(indx , op , A1 , A2 = '' , R = ''):
@@ -29,12 +56,15 @@ def fill_pb(indx , op , A1 , A2 = '' , R = ''):
 def write_pb():
     global pb
     output_file = open('output.txt', 'w')
-    for index, i in enumerate(pb):
-        output_file.write(f"{index}\t{i}\n")
+    if semanticErrorFileEmpty:
+        for index, i in enumerate(pb):
+            output_file.write(f"{index}\t{i}\n")
+    else :
+        output_file.write("The code has not been generated")
     output_file.close()
-
-def semanticError(message = ''):
-    return
+    if semanticErrorFileEmpty:
+        semanticErrorFile.write('The input program is semantically correct.')
+    semanticErrorFile.close()
 
 
 def get_tmp(slots = 1):
@@ -42,7 +72,7 @@ def get_tmp(slots = 1):
     global tmpAddr
     global wordLength
     addr = str(tmpAddr)
-    for i in range(slots):
+    for _ in range(slots):
         fill_pb(pbIndex , 'ASSIGN' , '#0' , str(tmpAddr))
         tmpAddr = tmpAddr + wordLength
         pbIndex = pbIndex + 1
@@ -53,12 +83,12 @@ def init_var(varType , varId , slots):
     global pbIndex
     global symbol_table
 
-    if varType == 'arr':
+    if varType == 'array':
         arrAddress = get_tmp()
         arr = get_tmp(int(slots))
         fill_pb(pbIndex , 'ASSIGN' , '#{}'.format(arr) , arrAddress)
         pbIndex = pbIndex + 1
-        symbol_table.append(('arr' , varId , arrAddress))
+        symbol_table.append(('array' , varId , arrAddress))
     
     elif varType == 'int' or varType == 'void':
         intAddress = get_tmp()
@@ -78,15 +108,28 @@ def functionCall():
         if isinstance(s, list):
             funcArgs = s
             break;
+    else:
+        return
     
     inputLen = len(funcArgs) - 3
 
-    if inputLen != inputLen:
-        semanticError("args length error")
+    funcName = find_name(semanticStack[-1 -functionCallArgsCount])
+
+    if inputLen != functionCallArgsCount:
+        semanticError(f"Mismatch in numbers of arguments of \'{funcName}\'")
+        for _ in range(functionCallArgsCount): semanticStack.pop()
+        return
 
     # assign function inputs
     for i in range(inputLen):
-        fill_pb(pbIndex, 'ASSIGN', semanticStack[ssLen - inputLen + i], funcArgs[i + 1])
+        var1 = semanticStack[ssLen - inputLen + i]
+        var2 = funcArgs[i+1]
+        functypes = []
+        for j in symbol_table:
+            if j[0] == 'FUNC' and j[2] == funcArgs: functypes = j[3]
+        if get_type(var1) != functypes[i]:
+            semanticError(f"Mismatch in type of argument {i+1} of \'{funcName}\'. Expected \'{functypes[i]}\' but got \'{get_type(var1)}\' instead.")
+        fill_pb(pbIndex, 'ASSIGN', var1, var2)
         pbIndex = pbIndex + 1
 
     # assign return address after function compeletion
@@ -96,7 +139,7 @@ def functionCall():
     # go  to function //second initvar is for function location
     fill_pb(pbIndex, 'JP', funcArgs[0] + 1)
     pbIndex = pbIndex + 1
-    for i in range(inputLen + 1):
+    for _ in range(inputLen + 1):
         semanticStack.pop()
         
     # create a new variable and assign function output to it
@@ -116,6 +159,8 @@ def generateCode(look_ahead , action):
     global wordLength
     global forElementsCount
     global functionCallArgsCount
+    global breakQ
+    global returnQ
 
     if action == '#pid':
         if look_ahead.value == 'output':
@@ -131,7 +176,7 @@ def generateCode(look_ahead , action):
         id = semanticStack.pop()
         typ = semanticStack.pop()
         if typ == 'void':
-            semanticError('void var init')
+            semanticError(f'Illegal type of void for {id}', 1)
         init_var(typ, id, '')
 
     elif action == '#initArr':
@@ -140,7 +185,7 @@ def generateCode(look_ahead , action):
         if semanticStack.pop() == 'void':
             semanticError('void var init')
         
-        init_var('arr' , id , arrSlots[1:])
+        init_var('array' , id , arrSlots[1:])
 
     elif action == '#FuncStart':
         stackTop = semanticStack.pop()
@@ -152,22 +197,20 @@ def generateCode(look_ahead , action):
 
     elif action == '#addFuncToSymTable':
         funcAttr = []
+        funcAttrType = []
         latestSymbol = symbol_table.pop()
         while latestSymbol != 'BEGINNING':
             funcAttr.append(latestSymbol[2])
+            funcAttrType.append(latestSymbol[0])
             latestSymbol = symbol_table.pop()
         funcAttr.append(semanticStack[-3])
         funcAttr.reverse()
         funcAttr.append(semanticStack[-2])
         funcAttr.append(semanticStack[-1])
-        symbol_table.append(('FUNC', semanticStack[-4], funcAttr))
+        symbol_table.append(('FUNC', semanticStack[-4], funcAttr, funcAttrType))
         for _ in range(4): semanticStack.pop()
 
-        if symbol_table[-1][1] == 'main':
-            tmp = get_tmp()
-            fill_pb(semanticStack.pop(), 'ADD', '#0', '#0', tmp)
-            pbIndex = pbIndex + 1
-        else:
+        if symbol_table[-1][1] != 'main':
             fill_pb(semanticStack.pop(), 'JP', pbIndex)
         semanticStack.pop()
 
@@ -186,13 +229,15 @@ def generateCode(look_ahead , action):
         pbIndex = pbIndex + 1
 
     elif action == '#break':
+        if len(breakQ) == 0:
+            semanticError("No 'while' or 'switch' found for 'break'.", 1)       
         breakQ.append(pbIndex)
         pbIndex = pbIndex + 1
 
-    elif action == '#startbreak':
+    elif action == '#break_start':
         breakQ.append("begin")
 
-    elif action == '#endbreak':
+    elif action == '#break_end':
         index = breakQ.pop()
         while index != 'begin':
             fill_pb(index, 'JP', pbIndex)
@@ -264,6 +309,16 @@ def generateCode(look_ahead , action):
         var1 = semanticStack.pop()
         tmp = get_tmp()
 
+        if var1 == None or var2 == None:
+            var1 = '#0'
+            var2 = '#0'
+        
+        type1 = get_type(var1)
+        type2 = get_type(var2)
+
+        if (type1 == 'void' and type2 != 'void') or (type1 != 'void' and type2 =='void') :
+            semanticError(f'Type mismatch in operands, Got {type2} instead of {type1}')
+        
         if op == '*':
             fill_pb(pbIndex , 'MULT' , var1 , var2 , tmp)
         elif op == '+':
